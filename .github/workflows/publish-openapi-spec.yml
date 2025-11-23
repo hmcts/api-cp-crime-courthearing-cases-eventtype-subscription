@@ -30,7 +30,7 @@ jobs:
       SWAGGERHUB_API_KEY: ${{ secrets.SWAGGERHUB_API_KEY }}
     steps:
       - name: Download versioned OpenAPI spec
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: ${{ inputs.upload_artifact_name }}
           path: ./${{ inputs.api_version }}

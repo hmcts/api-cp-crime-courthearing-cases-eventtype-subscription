@@ -82,7 +82,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Download updated OpenAPI file
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: ${{ needs.Update-Spec-Version.outputs.upload_artifact_name }}
           path: ${{ env.FILE_PATH_OPENAPI }}
