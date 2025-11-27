@@ -1,0 +1,35 @@
+tasks.withType(Test).configureEach {
+  useJUnitPlatform()
+
+  testLogging {
+    exceptionFormat = 'full'
+  }
+}
+
+tasks.named('test') {
+  useJUnitPlatform()
+  systemProperty 'API_SPEC_VERSION', System.getProperty('API_SPEC_VERSION', '0.0.0')
+  failFast = true
+  testLogging {
+    events "passed", "skipped", "failed"
+    exceptionFormat = 'full'
+    showStandardStreams = true
+  }
+  reports {
+    junitXml.required.set(true) // For CI tools (e.g. Jenkins, GitHub Actions)
+    html.required.set(true)     // Human-readable browser report
+  }
+}
+
+tasks.named('jacocoTestReport') {
+  dependsOn tasks.named('test')
+  reports {
+    xml.required.set(true)
+    csv.required.set(false)
+    html.required.set(true)
+  }
+}
+
+tasks.named('check') {
+  dependsOn tasks.named('jacocoTestReport')
+}

@@ -1,0 +1,22 @@
+jar {
+  dependsOn tasks.named('cyclonedxBom')
+  if (file("CHANGELOG.md").exists()) {
+    println "✅ Including CHANGELOG.md in JAR"
+    from('CHANGELOG.md') {
+      into 'META-INF'
+    }
+  } else {
+    println "⚠️  CHANGELOG.md not found, skipping inclusion in JAR"
+  }
+
+  def sbomFile = file("${layout.buildDirectory.get().asFile.absolutePath}/reports/bom.json")
+  if (sbomFile.exists()) {
+    println "✅ Including SBOM from ${sbomFile} in JAR"
+    from(sbomFile) {
+      into 'META-INF/sbom'
+      rename { 'bom.json' }
+    }
+  } else {
+    println "⚠️  SBOM (bom.json) not found, skipping inclusion in JAR"
+  }
+}

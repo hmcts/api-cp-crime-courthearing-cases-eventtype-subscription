@@ -1,0 +1,17 @@
+java {
+  def javaVersion = JavaVersion.toVersion(System.getProperty("java.version"))
+  sourceCompatibility = javaVersion
+  targetCompatibility = javaVersion
+}
+
+sourceSets {
+  main {
+    java {
+      srcDir "$buildDir/generated/src/main/java"
+    }
+  }
+}
+
+tasks.withType(JavaCompile).configureEach {
+  options.compilerArgs = ["-Xlint:unchecked", "-Werror"]
+}

@@ -1,0 +1,69 @@
+def formatterUrl = 'https://raw.githubusercontent.com/hmcts/api-cp-code-style/refs/heads/main/config/formatter/eclipse-formatter.xml'
+def formatterPath = "${layout.buildDirectory.get().asFile.absolutePath}/eclipse-formatter.xml"
+
+def inputSpecFile = fileTree("src/main/resources/openapi")
+  .matching { include("openapi-spec.yml") }
+  .singleFile
+
+spotless {
+  java {
+    target 'build/generated/src/main/**/*.java'
+    removeUnusedImports()
+    eclipse().configFile(formatterPath)
+  }
+}
+
+tasks.named('spotlessApply') {
+  dependsOn tasks.named('openApiGenerate'), tasks.named('downloadFormatter')
+}
+
+tasks.named('spotlessJava') {
+  dependsOn tasks.named('openApiGenerate'), tasks.named('downloadFormatter')
+}
+
+tasks.named('compileJava') {
+  dependsOn tasks.named('spotlessApply')
+}
+
+tasks.register('downloadFormatter') {
+  outputs.file(formatterPath)
+  doLast {
+    def file = new File(formatterPath)
+    file.parentFile.mkdirs()
+    file.text = new URI(formatterUrl).toURL().text
+  }
+}
+
+tasks.named("openApiGenerate") {
+  inputs.file(inputSpecFile)
+}
+
+// The OpenAPI generator automatically generates constructors for models based on the schema.
+// Applying Lombok’s @AllArgsConstructor and @lombok.NoArgsConstructor will try to generate a constructor with the same signature.
+// The duplicate constructors are causing a compilation error.
+// If the schema becomes more complicated then add @lombok.AllArgsConstructor and @lombok.NoArgsConstructor back as it will generate other constructors which will not clash
+openApiGenerate {
+  generatorName = "spring"
+  inputSpec = inputSpecFile.absolutePath
+  outputDir = "${layout.buildDirectory.get().asFile.absolutePath}/generated"
+  apiPackage = "uk.gov.hmcts.cp.openapi.api"
+  modelPackage = "uk.gov.hmcts.cp.openapi.model"
+  generateModelTests = true
+  generateApiTests = true
+  cleanupOutput = true
+  configOptions = [
+    validateSpec                  : "true",
+    dateLibrary                   : "java8",
+    interfaceOnly                 : "true",
+    hideGenerationTimestamp       : "true",
+    useJakartaEe                  : "true",
+    useBeanValidation             : "true",
+    useTags                       : "true",
+    useSpringBoot3                : "true",
+    implicitHeaders               : "false",
+    performBeanValidation         : "true",
+    additionalModelTypeAnnotations: "@lombok.Builder;@lombok.AllArgsConstructor;@lombok.NoArgsConstructor",
+    serializableModel             : "true",
+    openApiNullable               : "false"
+  ]
+}

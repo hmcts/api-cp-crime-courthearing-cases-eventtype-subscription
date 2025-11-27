@@ -10,7 +10,7 @@ jobs:
   pmd-analysis:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -20,10 +20,16 @@ jobs:
           java-version: '21'
 
       - uses: pmd/pmd-github-action@v2
+        id: pmd
         with:
           rulesets: '.github/pmd-ruleset.xml'
           sourcePath: 'src/main/java'
-
+          analyzeModifiedFilesOnly: false
       - name: Fail build if there are violations
-        if: steps.pmd.outputs.violations != 0
-        run: exit 1
+        if: always()
+        run: |
+          VIOLATIONS="${{ steps.pmd.outputs.violations }}"
+          if [ -n "$VIOLATIONS" ] && [ "$VIOLATIONS" != "0" ]; then
+            echo "PMD found $VIOLATIONS violations"
+            exit 1
+          fi
