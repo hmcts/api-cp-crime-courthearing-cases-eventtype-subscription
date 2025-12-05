@@ -1,31 +1,43 @@
-# Court Case Result Subscription API – Functional Requirements (Draft)
+# Criminal Court Result Subscription API – Functional Requirements (Draft)
 
-Consumer: Initial consumer Remand and Sentence Service (RaSS)
 Producer: HMCTS Common Platform
+
+Consumer: **Initial** consumer Remand and Sentence Service (RaSS)
+
 Version: Draft 0.1
+
 Status: For discussion
 
 ## Purpose of the API
 
-The Prisons Case Result Event API replaces the current email-based process for sending custodial warrants and sentencing documents from HMCTS to Prisons.
-This manual process contributes to approximately 100 releases in error per year.
+The Criminal Courts (Magistrate and Crown) Result Subscription API provides a standardised, reusable mechanism for HMCTS
+to publish custody-relevant case result events to authorised justice partners.
 
-The API will:
-* Notify Prisons when a custody-relevant event occurs (e.g. result created or updated).
-* Provide structured metadata and a reference to retrieve associated documents (PDF warrants).
-* Enable Prisons (RaSS) to fetch documents programmatically to drive automated workflow actions.
+While the initial consumer is the Prisons Remand and Sentencing Service (RaSS), the API is intentionally designed as a
+multi-consumer event distribution pattern that can support wider cross-justice needs (e.g. DWP, Probation, Police, Victims Services).
 
-Email delivery will run in parallel during the early adoption phase to eliminate operational risk.
+The API enables:
+* Event-based notifications when HMCTS records or amends a custody-impacting court result.
+* Structured metadata describing the event so consumers can automate workflow decisions.
+* A consistent document access model, providing a URL for retrieving the current source-of-truth court documents (e.g. PDF warrants, in early phases).
+* A scalable subscription model that aligns with the HMCTS API Marketplace, allowing future consumers to onboard without bespoke integrations.
 
-## Functional Requirements
+### Initial Use Case: RaSS Warrant Ingestion
 
-### Event-Based Notification Model
+The initial use case for this API is to support RaSS in automating the ingestion of custodial warrants and sentencing documents from HMCTS.
 
-HMCTS must publish case result events whenever:
+This work replaces part of the existing email-based warrant distribution process — which contributes to operational errors,
+including Releases in Error — and provides a modern, event-driven foundation for safer and more consistent data sharing between courts and prisons.
+
+Email delivery will run in parallel during early adoption to minimise operational risk during transition.
+
+## Event-Based Subscription and Publishing Model
+
+The API must support a subscription-based event model where consumers can register to receive custody-relevant result events via webhooks.
+
+HMCTS must publish result events whenever:
 * A new custodial outcome occurs.
 * An amended custodial result is recorded (treated identically to “create”).
-
-## Subscription
 
 ### Subscription Registration
 
@@ -153,15 +165,77 @@ sequenceDiagram
     APIM-->>Webhook: Consumer: Deliver result event<br/>(asynchronously)
 ```
 
+## Authentication
+
+### API Authentication
+
+All API requests require authentication using OAuth 2.0 client credentials flow:
+
+1. **Client Registration**: Common Platform registers the consumer application (e.g., RaSS) in Microsoft Entra ID and provides the client ID and secret
+2. **Token Acquisition**: Clients obtain an access token from Common Platform Microsoft Entra ID using their client ID and secret
+3. **Token Usage**: Include the access token in the `Authorization` header as a Bearer token
+4. **Token Refresh**: Tokens have a limited lifetime; clients must refresh before expiry
+
+### Token Validation
+
+API Management (Gateway) validates all incoming tokens using the built-in `validate-jwt` policy before forwarding requests to backend services. Validation is performed locally using cached public keys from Microsoft Entra ID (JWKS endpoint):
+
+1. **Signature Verification**: Validates the token signature against cached Microsoft Entra ID public keys
+2. **Expiry Check**: Rejects expired tokens (validates `exp` claim)
+3. **Issuer Validation**: Confirms the `iss` claim matches Common Platform Microsoft Entra ID tenant
+4. **Audience Validation**: Confirms the `aud` claim matches this API's application ID
+
+Invalid tokens are rejected with HTTP 401 Unauthorized.
+
+**APIM Policy Example:**
+```xml
+<inbound>
+    <validate-jwt header-name="Authorization" failed-validation-httpcode="401">
+        <openid-config url="https://login.microsoftonline.com/{tenant-id}/v2.0/.well-known/openid-configuration" />
+        <audiences>
+            <audience>{api-application-id}</audience>
+        </audiences>
+        <issuers>
+            <issuer>https://login.microsoftonline.com/{tenant-id}/v2.0</issuer>
+        </issuers>
+    </validate-jwt>
+</inbound>
+```
+
+### Webhook Authentication
+
+When delivering events to consumer webhook endpoints (e.g., RaSS), Common Platform must authenticate using the mechanism specified by HMPPS. See: https://ministryofjustice.github.io/hmpps-integration-api/authentication.html
+
+HMPPS requires two complementary authentication methods:
+
+1. **Mutual TLS (mTLS)**: Common Platform must present a TLS certificate issued by HMPPS when making webhook requests
+2. **API Key**: Include an `x-api-key` HTTP header containing the API key provided by HMPPS (not Base64 encoded)
+
+**Setup Process:**
+1. HMPPS issues a TLS certificate and API key to Common Platform
+2. Common Platform stores these credentials securely (e.g., Azure Key Vault)
+3. When delivering webhook events, Common Platform presents the TLS certificate and includes the API key header
+
+**Security Requirements:**
+- All communication over TLS 1.2 or higher
+- Credentials must be stored securely (e.g., Azure Key Vault)
+- Rotate credentials periodically
+- Log authentication failures for security monitoring
+
+
+# *******************************************************************
+# TODO: THE BELOW IS A SEPARATE API DEFINITION - MOVE TO CORRECT REPO
+# *******************************************************************
+
 
 ### Document Retrieval Process
 
 After receiving an event, the consumer (RaSS) will:
-1.	Receive webhook POST event.
+1.	Receive webhook POST event containing only the event ID.
 2.	MVP behaviour:
-   * Request the event details and a “document link pointer” via: `GET /cases/{case_id}/results/{result_event_type}`
-   * **NOTE:** the underlying service must only allow retrieval of subscription-relevant events.
-3.	Follow the URL to obtain a signed URL for the PDF warrant document.
+3.  * Query AMP to retrieve full event details via: `GET /cases/{case_id}/results/{event_id}`
+    * **NOTE:** the underlying service must only allow retrieval of subscription-relevant events.
+3.	Request the document via the streaming API: `GET /cases/{case_id}/results/{event_id}/document`
 
 ```mermaid
 
@@ -170,25 +244,29 @@ sequenceDiagram
 
     participant Consumer as RaSS (HMPPS)
     participant Webhook as RaSS (HMPPS)<br/>Webhook Endpoint
-    participant APIM as API Management (Gateway)    
+    participant APIM as API Management (Gateway)
     participant CCRS as Crime Courthearing Cases<br/>Results Subscription<br/>(Worker)
     participant DocStore as Azure Storage<br/>Document Store
 
     Note over APIM,Webhook: Producer publishes result events
-    CCRS->>APIM: Case Result Event
-    
-    APIM-->>Webhook: Consumer: Deliver result event<br/>(asynchronously)
+    CCRS->>APIM: Case Result Event<br/>{eventId}
 
-    Note over Consumer,APIM: Result Event Data Retrieval
+    APIM-->>Webhook: Consumer: Deliver event notification<br/>{eventId only}
 
-    Consumer->>APIM: GET /cases/{caseId}/results/{eventType}
-    APIM-->>Consumer: 200 OK<br/>{metadata + link to signed document URL}
+    Note over Consumer,APIM: Event Details Retrieval
 
-    Note over Consumer: Document Retrieval via signed URL
+    Consumer->>APIM: GET /cases/{caseId}/results/{eventId}
+    APIM-->>Consumer: 200 OK<br/>{full event metadata}
 
-    Consumer->>DocStore: GET {signedDocumentUrl}
-    DocStore-->>Consumer: 200 OK<br/>PDF Document Stream
-    
+    Note over Consumer,DocStore: Document Retrieval via Streaming API
+
+    Consumer->>APIM: GET /cases/{caseId}/results/{eventId}/document
+    APIM->>CCRS: Forward request
+    CCRS->>DocStore: Retrieve document
+    DocStore-->>CCRS: Document stream
+    CCRS-->>APIM: Document stream
+    APIM-->>Consumer: 200 OK<br/>PDF Document Stream
+
     Note over Consumer: Consumer stores PDF locally<br/>(S3 or equivalent)
 ```
 
@@ -201,7 +279,7 @@ Until the operational process changes, this must remain part of the producer–c
 #### Document Retrieval Requirements
 
 * Documents must not be embedded in any JSON event payload.
-* API returns metadata and a signed URL for the PDF.
+* API provides a streaming endpoint for document retrieval: `GET /cases/{case_id}/results/{event_id}/document`
 * HMCTS document storage remains the source of truth.
 * Prisons will store a local copy (AWS S3) to support their workflow automation.
 
@@ -310,7 +388,7 @@ API Requirements
 
 The new system must:
 * Use secure authentication (OAuth2 preferred long-term)
-* Provide time-limited signed URLs for documents
+* Provide authenticated document streaming API (no signed URLs)
 * Enforce strong audit trails and access controls
 * Never embed PDFs directly in event payloads
 * Ensure privacy and integrity of custody-related data
@@ -327,3 +405,6 @@ The new system must:
 * Define authentication model for all consumer but initially for RaSS (temporary → long-term OAuth2)
 * Produce OpenAPI v1.0 draft
   * Including event schema for MVP
+
+
+
