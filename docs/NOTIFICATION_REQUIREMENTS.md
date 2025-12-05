@@ -1,21 +1,35 @@
-# Court Case Result Subscription API – Functional Requirements (Draft)
+# Criminal Court Result Subscription API – Functional Requirements (Draft)
 
-Consumer: Initial consumer Remand and Sentence Service (RaSS)
 Producer: HMCTS Common Platform
+
+Consumer: **Initial** consumer Remand and Sentence Service (RaSS)
+
 Version: Draft 0.1
+
 Status: For discussion
 
 ## Purpose of the API
 
-The Prisons Case Result Event API replaces the current email-based process for sending custodial warrants and sentencing documents from HMCTS to Prisons.
-This manual process contributes to approximately 100 releases in error per year.
+The Criminal Courts (Magistrate and Crown) Result Subscription API provides a standardised, reusable mechanism for HMCTS
+to publish custody-relevant case result events to authorised justice partners.
 
-The API will:
-* Notify Prisons when a custody-relevant event occurs (e.g. result created or updated).
-* Provide structured metadata and a reference to retrieve associated documents (PDF warrants).
-* Enable Prisons (RaSS) to fetch documents programmatically to drive automated workflow actions.
+While the initial consumer is the Prisons Remand and Sentencing Service (RaSS), the API is intentionally designed as a
+multi-consumer event distribution pattern that can support wider cross-justice needs (e.g. DWP, Probation, Police, Victims Services).
 
-Email delivery will run in parallel during the early adoption phase to eliminate operational risk.
+The API enables:
+* Event-based notifications when HMCTS records or amends a custody-impacting court result.
+* Structured metadata describing the event so consumers can automate workflow decisions.
+* A consistent document access model, providing a URL for retrieving the current source-of-truth court documents (e.g. PDF warrants, in early phases).
+* A scalable subscription model that aligns with the HMCTS API Marketplace, allowing future consumers to onboard without bespoke integrations.
+
+### Initial Use Case: RaSS Warrant Ingestion
+
+The initial use case for this API is to support RaSS in automating the ingestion of custodial warrants and sentencing documents from HMCTS.
+
+This work replaces part of the existing email-based warrant distribution process — which contributes to operational errors,
+including Releases in Error — and provides a modern, event-driven foundation for safer and more consistent data sharing between courts and prisons.
+
+Email delivery will run in parallel during early adoption to minimise operational risk during transition.
 
 ## Functional Requirements
 
