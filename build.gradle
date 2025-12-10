@@ -28,7 +28,6 @@ ext {
 }
 
 dependencies {
-  // OpenAPI Generator runtime support
   implementation 'org.openapitools:openapi-generator-core:7.17.0'
   implementation 'io.swagger.parser.v3:swagger-parser:2.1.36'
   implementation 'io.swagger.core.v3:swagger-annotations:2.2.41'
