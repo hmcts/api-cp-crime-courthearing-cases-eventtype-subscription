@@ -2,8 +2,12 @@ openapi: 3.1.0
 
 info:
   title: Client Subscriptions API
-  version: 1.0.0
   description: API for managing client subscriptions as standalone resources.
+  version: 1.0.0
+  license:
+    name: MIT
+    url: 'https://opensource.org/licenses/MIT'
+
 
 servers:
   - url: https://api.example.com

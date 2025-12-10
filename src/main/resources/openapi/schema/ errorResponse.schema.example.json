@@ -1,0 +1,4 @@
+{
+  "error": "invalid_request",
+  "message": "eventTypes must contain at least one value."
+}
