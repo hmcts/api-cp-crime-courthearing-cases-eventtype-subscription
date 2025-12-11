@@ -1,0 +1,9 @@
+{
+  "notificationEndpoint": {
+    "webhookUrl": "https://client.example.com/events"
+  },
+  "eventTypes": [
+    "PCR",
+    "CUSTODIAL_RESULT"
+  ]
+}
