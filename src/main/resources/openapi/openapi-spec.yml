@@ -19,7 +19,7 @@ security:
   - bearerAuth: []
 
 paths:
-  /clientSubscriptions:
+  /client-subscriptions:
     post:
       summary: Create a new client subscription
       description: Creates a new client subscription with the specified notification endpoint and event types.
@@ -71,7 +71,7 @@ paths:
           description: Unauthorized
 
 
-  /clientSubscriptions/{clientSubscriptionId}:
+  /client-subscriptions/{clientSubscriptionId}:
     get:
       summary: Retrieve a client subscription by ID
       description: Returns the subscription matching the given clientSubscriptionId.
