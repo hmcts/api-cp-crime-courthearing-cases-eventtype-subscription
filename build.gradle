@@ -28,16 +28,16 @@ ext {
 }
 
 dependencies {
-  // See docs/DEPENDENCIES.md
+  // See docs/DEPENDENCIES.md that explains why we JUST ONE implementation dependencies
   implementation 'io.swagger.core.v3:swagger-annotations:2.2.41'
 
   compileOnly 'org.openapitools:openapi-generator-core:7.17.0'
   compileOnly 'io.swagger.parser.v3:swagger-parser:2.1.36'
 
   compileOnly "org.springframework.boot:spring-boot-starter-web:$springBootVersion"
-  testCompileOnly "org.springframework.boot:spring-boot-starter-web:$springBootVersion"
+  testImplementation "org.springframework.boot:spring-boot-starter-web:$springBootVersion"
   compileOnly "org.springframework.boot:spring-boot-starter-validation:$springBootVersion"
-  testCompileOnly "org.springframework.boot:spring-boot-starter-validation:$springBootVersion"
+  testImplementation "org.springframework.boot:spring-boot-starter-validation:$springBootVersion"
   testImplementation "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
 
   compileOnly group: 'org.projectlombok', name: 'lombok', version: lombokVersion
