@@ -18,6 +18,9 @@ servers:
 security:
   - bearerAuth: []
 
+tags:
+  - name: Subscription
+
 paths:
   /client-subscriptions:
     post:
