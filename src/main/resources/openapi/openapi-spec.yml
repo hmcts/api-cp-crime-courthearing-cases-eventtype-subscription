@@ -220,7 +220,6 @@ components:
       properties:
         webhookUrl:
           type: string
-          format: uri
           pattern: '^https://.*$'
 
     ClientSubscriptionRequest:
@@ -234,6 +233,7 @@ components:
         eventTypes:
           type: array
           minItems: 1
+          maxItems: 2
           items:
             $ref: '#/components/schemas/EventType'
 

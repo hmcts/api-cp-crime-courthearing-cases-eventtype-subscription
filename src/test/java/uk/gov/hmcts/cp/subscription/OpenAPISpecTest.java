@@ -1,4 +1,4 @@
-package uk.gov.hmcts.cp.config;
+package uk.gov.hmcts.cp.subscription;
 
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
@@ -34,7 +34,7 @@ class OpenAPISpecTest {
     @Test
     void notification_endpoint_should_have_correct_type() throws NoSuchFieldException {
         Field webhookUrlField = NotificationEndpoint.class.getDeclaredField("webhookUrl");
-        assertThat(webhookUrlField.getType()).isEqualTo(URI.class);
+        assertThat(webhookUrlField.getType()).isEqualTo(String.class);
     }
 
     @Test
