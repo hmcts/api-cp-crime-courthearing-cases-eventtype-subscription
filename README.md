@@ -1,6 +1,15 @@
-# API HMCTS 
+# CRIME HEARING CASE EVENT SUBSCRIPTION API HMCTS 
 
 The Court Hearing Cases API provides details of a criminal court case results
+
+## Subscriptions
+ 
+[Subscriptions](docs/SUBSCRIPTIONS.md)
+
+## Notifications
+
+[Notifications](docs/NOTIFICATIONS.md)
+
 
 ### Contribute to This Repository
 

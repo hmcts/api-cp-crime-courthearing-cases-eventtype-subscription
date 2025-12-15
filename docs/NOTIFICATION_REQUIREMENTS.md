@@ -79,41 +79,6 @@ These events will ultimately replace the existing email “action point”.
 * Retries managed by Worker with exponential backoff - 3 tries over 15 minutes.
 * Failures routed to DLQ - DLQs will be kept per subscription for 28 days, then they will be purged.
 
-### Subscription Retrieval
-
-Retrieve all subscriptions for the consumer
-
-`GET /cases/results/subscriptions`
-
-Response:
-```json
-{
-    "subscriptions": [
-        {
-          "THE_SUBSCRIPTION_ID": ["ResultEventType", "..."]
-        },
-        {
-          "ANOTHER_SUBSCRIPTION_ID": ["ResultEventType", "..."]
-        }
-    ]
-}
-```
-
-Retrieve a specific subscription
-
-`GET /cases/results/subscriptions/{subscriptionId}`
-
-Response:
-```json
-    {
-      "subscriptions": [
-        {
-          "THE_SUBSCRIPTION_ID": ["ResultEventType", "..."]
-        }
-      ]
-    }
-```
-
 #### Sequence Diagrams: Subscription Registration and Retrieval
 
 ```mermaid
