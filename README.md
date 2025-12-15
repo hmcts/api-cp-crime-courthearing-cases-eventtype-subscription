@@ -2,6 +2,10 @@
 
 The Court Hearing Cases API provides details of a criminal court case results
 
+## Architecture 
+
+![Architecture Diagram](docs/architecture.png)
+
 ## Subscriptions
  
 [Subscriptions](docs/SUBSCRIPTIONS.md)
