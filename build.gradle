@@ -25,8 +25,8 @@ apply {
 }
 
 dependencies {
-  compileOnly 'org.openapitools:openapi-generator-core:7.17.0'
-  compileOnly 'io.swagger.parser.v3:swagger-parser:2.1.36'
+  compileOnly 'org.openapitools:openapi-generator-core:7.18.0'
+  compileOnly 'io.swagger.parser.v3:swagger-parser:2.1.37'
 
   // See docs/DEPENDENCIES.md that explains why we have JUST ONE implementation / published dependency
   // The rest are not included in published dependencies
