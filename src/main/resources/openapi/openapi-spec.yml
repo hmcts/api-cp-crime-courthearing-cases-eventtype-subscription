@@ -261,3 +261,53 @@ components:
           type:
             - string
           format: date-time
+
+    PcrEventPayload:
+      type: object
+      description: >
+        Payload representing a stored PCR document event.
+      required:
+        - eventId
+        - caseUrn
+        - masterDefendantId
+        - defendantName
+        - defendantDateOfBirth
+        - documentUrl
+        - pcrGeneratedTimestamp
+      properties:
+        eventId:
+          type: string
+          format: uuid
+          description: Unique identifier of the stored PCR document
+
+        caseUrn:
+          type: string
+          description: Case URN associated with the PCR
+
+        masterDefendantId:
+          type: string
+          description: Unique identifier for the master defendant
+
+        defendantName:
+          type: string
+          description: Full name of the defendant
+
+        defendantDateOfBirth:
+          type: string
+          format: date
+          description: Defendant date of birth
+
+        documentUrl:
+          type: string
+          format: uri
+          description: Secure URL to access the PCR document
+
+        pcrGeneratedTimestamp:
+          type: string
+          format: date-time
+          description: Timestamp when the PCR document was generated
+
+        prisonEmailAddress:
+          type: string
+          format: email
+          description: Prison email address associated with the PCR

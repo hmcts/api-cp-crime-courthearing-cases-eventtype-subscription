@@ -82,4 +82,18 @@ class OpenAPISpecTest {
                 .extracting(Method::getName)
                 .containsAll(List.of("createClientSubscription", "getClientSubscription", "updateClientSubscription", "deleteClientSubscription"));
     }
+    @Test
+    void pcr_event_payload_should_have_expected_fields() {
+        assertThat(PcrEventPayload.class)
+                .hasDeclaredFields(
+                        "eventId",
+                        "caseUrn",
+                        "masterDefendantId",
+                        "defendantName",
+                        "defendantDateOfBirth",
+                        "documentUrl",
+                        "pcrGeneratedTimestamp",
+                        "prisonEmailAddress"
+                );
+    }
 }
