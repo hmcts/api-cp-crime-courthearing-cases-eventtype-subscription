@@ -265,49 +265,88 @@ components:
     PcrEventPayload:
       type: object
       description: >
-        Payload representing a stored PCR document event.
+        Payload representing a stored PCR document event with defendants and case details.
       required:
         - eventId
-        - caseUrn
-        - masterDefendantId
-        - defendantName
-        - defendantDateOfBirth
-        - documentUrl
-        - pcrGeneratedTimestamp
+        - eventType
+        - timestamp
+        - defendants
       properties:
         eventId:
           type: string
           format: uuid
-          description: Unique identifier of the stored PCR document
+          description: Unique identifier of the stored PCR document event
 
-        caseUrn:
+        eventType:
           type: string
-          description: Case URN associated with the PCR
+          description: Type of the event, e.g., PRISON_COURT_REGISTER_GENERATED
 
-        masterDefendantId:
-          type: string
-          description: Unique identifier for the master defendant
-
-        defendantName:
-          type: string
-          description: Full name of the defendant
-
-        defendantDateOfBirth:
-          type: string
-          format: date
-          description: Defendant date of birth
-
-        documentUrl:
-          type: string
-          format: uri
-          description: Secure URL to access the PCR document
-
-        pcrGeneratedTimestamp:
+        timestamp:
           type: string
           format: date-time
-          description: Timestamp when the PCR document was generated
+          description: Timestamp when the event occurred
 
-        prisonEmailAddress:
-          type: string
-          format: email
-          description: Prison email address associated with the PCR
+        defendants:
+          type: array
+          description: List of defendants associated with this event
+          items:
+            type: object
+            required:
+              - masterDefendantId
+              - name
+              - dateOfBirth
+            properties:
+              masterDefendantId:
+                type: string
+                description: Unique identifier for the master defendant
+
+              name:
+                type: string
+                description: Full name of the defendant
+
+              dateOfBirth:
+                type: string
+                format: date
+                description: Date of birth of the defendant
+
+              custodyEstablishmentDetails:
+                type: object
+                description: Details of the custody establishment
+                properties:
+                  emailAddress:
+                    type: string
+                    format: email
+                    description: Email address of the prison
+
+              cases:
+                type: array
+                description: List of cases associated with the defendant
+                items:
+                  type: object
+                  required:
+                    - urn
+                    - documents
+                  properties:
+                    urn:
+                      type: string
+                      description: Case URN associated with the defendant
+
+                    documents:
+                      type: array
+                      description: List of documents for this case
+                      items:
+                        type: object
+                        required:
+                          - url
+                          - timestamp
+                        properties:
+                          url:
+                            type: string
+                            format: uri
+                            description: Secure URL to access the document
+
+                          timestamp:
+                            type: string
+                            format: date-time
+                            description: Timestamp when the document was generated
+

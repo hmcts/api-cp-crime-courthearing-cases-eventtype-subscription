@@ -82,18 +82,22 @@ class OpenAPISpecTest {
                 .extracting(Method::getName)
                 .containsAll(List.of("createClientSubscription", "getClientSubscription", "updateClientSubscription", "deleteClientSubscription"));
     }
+
     @Test
-    void pcr_event_payload_should_have_expected_fields() {
-        assertThat(PcrEventPayload.class)
-                .hasDeclaredFields(
-                        "eventId",
-                        "caseUrn",
-                        "masterDefendantId",
-                        "defendantName",
-                        "defendantDateOfBirth",
-                        "documentUrl",
-                        "pcrGeneratedTimestamp",
-                        "prisonEmailAddress"
-                );
+    void pcr_event_payload_should_have_all_expected_top_level_fields() throws NoSuchFieldException {
+        assertThat(PcrEventPayload.class.getDeclaredField("eventId").getType())
+                .isEqualTo(UUID.class);
+
+        assertThat(PcrEventPayload.class.getDeclaredField("eventType").getType())
+                .isEqualTo(String.class);
+
+        assertThat(PcrEventPayload.class.getDeclaredField("timestamp").getType())
+                .isEqualTo(OffsetDateTime.class);
+
+        assertThat(List.class.isAssignableFrom(
+                PcrEventPayload.class.getDeclaredField("defendants").getType()))
+                .as("defendants field should be a List")
+                .isTrue();
     }
+
 }
