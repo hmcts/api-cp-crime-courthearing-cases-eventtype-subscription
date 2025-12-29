@@ -280,6 +280,7 @@ components:
         eventType:
           type: string
           description: Type of the event, e.g., PRISON_COURT_REGISTER_GENERATED
+          $ref: '#/components/schemas/EventType'
 
         timestamp:
           type: string

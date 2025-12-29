@@ -8,8 +8,9 @@ openApiGenerate {
   apiPackage = "uk.gov.hmcts.cp.openapi.api"
   modelPackage = "uk.gov.hmcts.cp.openapi.model"
   generatorName = "spring"
+  typeMappings = [OffsetDateTime: "Instant"]
+  importMappings = ["java.time.OffsetDateTime": "java.time.Instant"]
   configOptions = [
-    dateLibrary                         : "java8",
     interfaceOnly                       : "true",
     useSpringBoot3                      : "true",
     useTags                             : "true",   // use tag for api name

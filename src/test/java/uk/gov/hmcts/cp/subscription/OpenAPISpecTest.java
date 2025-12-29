@@ -3,12 +3,15 @@ package uk.gov.hmcts.cp.subscription;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import uk.gov.hmcts.cp.openapi.api.SubscriptionApi;
-import uk.gov.hmcts.cp.openapi.model.*;
+import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
+import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
+import uk.gov.hmcts.cp.openapi.model.EventType;
+import uk.gov.hmcts.cp.openapi.model.NotificationEndpoint;
+import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.net.URI;
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -72,8 +75,8 @@ class OpenAPISpecTest {
         assertThat(clientSubscriptionIdField.getType()).isEqualTo(UUID.class);
         assertThat(notificationEndpointField.getType()).isEqualTo(NotificationEndpoint.class);
         assertThat(eventTypesField.getType()).isAssignableFrom(List.class);
-        assertThat(createdAtField.getType()).isEqualTo(OffsetDateTime.class);
-        assertThat(updatedAtField.getType()).isEqualTo(OffsetDateTime.class);
+        assertThat(createdAtField.getType()).isEqualTo(Instant.class);
+        assertThat(updatedAtField.getType()).isEqualTo(Instant.class);
     }
 
     @Test
@@ -89,10 +92,10 @@ class OpenAPISpecTest {
                 .isEqualTo(UUID.class);
 
         assertThat(PcrEventPayload.class.getDeclaredField("eventType").getType())
-                .isEqualTo(String.class);
+                .isEqualTo(EventType.class);
 
         assertThat(PcrEventPayload.class.getDeclaredField("timestamp").getType())
-                .isEqualTo(OffsetDateTime.class);
+                .isEqualTo(Instant.class);
 
         assertThat(List.class.isAssignableFrom(
                 PcrEventPayload.class.getDeclaredField("defendants").getType()))
