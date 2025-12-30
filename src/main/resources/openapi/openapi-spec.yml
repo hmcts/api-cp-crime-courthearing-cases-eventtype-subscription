@@ -299,6 +299,7 @@ components:
             properties:
               masterDefendantId:
                 type: string
+                format: uuid
                 description: Unique identifier for the master defendant
 
               name:
