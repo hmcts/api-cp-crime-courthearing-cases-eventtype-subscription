@@ -34,16 +34,17 @@ public class ValidateClientSubscriptionRequestTest {
                 .eventTypes(List.of())
                 .notificationEndpoint(NotificationEndpoint.builder().callbackUrl("https://good-url").build())
                 .build();
-        validate_request_error(request, "size must be between 1 and 1");
+        validate_request_error(request, "size must be between 1 and 2147483647");
     }
 
     @Test
-    void validate_request_should_reject_too_many_event_types() {
+    void validate_request_should_accept_multiple_event_types() {
         ClientSubscriptionRequest request = ClientSubscriptionRequest.builder()
                 .eventTypes(List.of("PRISON_COURT_REGISTER_GENERATED", "PRISON_COURT_REGISTER_GENERATED"))
                 .notificationEndpoint(NotificationEndpoint.builder().callbackUrl("https://good-url").build())
                 .build();
-        validate_request_error(request, "size must be between 1 and 1");
+        Set<ConstraintViolation<ClientSubscriptionRequest>> errors = validator.validate(request);
+        assertThat(errors.size()).isEqualTo(0);
     }
 
     @Test
