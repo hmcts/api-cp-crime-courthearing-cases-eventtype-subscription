@@ -598,7 +598,6 @@ components:
         eventTypes:
           type: array
           minItems: 1
-          maxItems: 1
           items:
             $ref: '#/components/schemas/EventType'
 
