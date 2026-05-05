@@ -40,7 +40,7 @@ public class ValidateClientSubscriptionRequestTest {
     @Test
     void validate_request_should_accept_multiple_event_types() {
         ClientSubscriptionRequest request = ClientSubscriptionRequest.builder()
-                .eventTypes(List.of("PRISON_COURT_REGISTER_GENERATED", "PRISON_COURT_REGISTER_GENERATED"))
+                .eventTypes(List.of("PRISON_COURT_REGISTER_GENERATED", "WEE_Layout5"))
                 .notificationEndpoint(NotificationEndpoint.builder().callbackUrl("https://good-url").build())
                 .build();
         Set<ConstraintViolation<ClientSubscriptionRequest>> errors = validator.validate(request);
