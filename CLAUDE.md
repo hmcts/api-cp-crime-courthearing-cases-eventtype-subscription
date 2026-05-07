@@ -1,6 +1,15 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Keep replies extremely concise. No filler.
+
+## Code Rules (non-negotiable)
+- No comments unless the WHY is genuinely non-obvious (hidden constraint, workaround, surprising invariant). Never explain WHAT the code does.
+- No multi-line comment blocks or docstrings.
+- No error handling for scenarios that cannot happen. Trust internal code and framework guarantees. Only validate at real system boundaries (user input, external APIs).
+- No features, refactoring, or abstractions beyond what the task requires. Three similar lines > premature abstraction.
+- No half-finished implementations. No TODOs left in code.
+- No feature flags or fallbacks for hypothetical future requirements.
+- Bug fix = fix the bug only. Do not clean up surroundings.
 
 ## What This Repository Is
 
@@ -50,6 +59,12 @@ spectral lint "src/main/resources/openapi/*.{yml,yaml}"  # OpenAPI spec linting
 - `POST /notifications` — internal trigger for notification fanout (tagged "Internal")
 - `GET /client-subscriptions/{clientSubscriptionId}/documents/{documentId}` — retrieve PDF documents
 
+### Notable Spec Constraints
+- Each subscription registers **exactly one** event type (`eventTypes` has `minItems: 1, maxItems: 1`)
+- Webhook URLs must match `^https://.*$` — HTTP not accepted
+- Internal HMCTS URLs (`cjscp.org.uk`, `hmcts.net`, `justice.gov.uk`, `ejudiciary.net`, `service.gov.uk`) are blocked by the lint CI and must not appear in the spec
+- JSON schema request/response examples live in `src/main/resources/openapi/schema/` and are validated by the `lint-openapi.yml` CI workflow using `ajv`
+
 ### Security
 All endpoints require Bearer JWT + `Ocp-Apim-Subscription-Key` header. Callbacks include `X-Key-Id` and `X-Signature` (HMAC-SHA256) headers. The HMAC secret is returned **once** at subscription creation inside `HmacCredentials` and cannot be retrieved again.
 
@@ -75,7 +90,7 @@ Test method names use underscores (e.g. `notification_endpoint_should_have_expec
 
 ### Gradle Configuration Modules
 - `gradle/openapi.gradle` — OpenAPI code generation settings (packages, type mappings, lombok injection)
-- `gradle/java.gradle` — Java 25 (temurin), `-Xlint:unchecked -Werror` (warnings are compiler errors)
+- `gradle/java.gradle` — Java 25 (Temurin toolchain), `-Xlint:unchecked -Werror` (warnings are compiler errors)
 - `gradle/test.gradle` — JUnit Platform, Jacoco, fail-fast enabled
 - `gradle/pmd.gradle` — PMD rules (see `.github/pmd-ruleset.xml`); generated code is excluded
 - `gradle/jar.gradle` — JAR packaging; includes `CHANGELOG.md` in `META-INF` and CycloneDX SBOM (`bom.json`)
@@ -90,6 +105,9 @@ Test method names use underscores (e.g. `notification_endpoint_should_have_expec
 CI injects the generated artifact version into `openapi-spec.yml` (via `hmcts/update-openapi-version`) before the build/publish steps run.
 
 Artifact publishing requires `GITHUB_TOKEN`, `AZURE_DEVOPS_ARTIFACT_USERNAME`, and `AZURE_DEVOPS_ARTIFACT_TOKEN` environment variables.
+
+### OpenSpec Change Workflow
+Proposed API changes are tracked as structured artifacts under `openspec/changes/<change-name>/`. Each change directory contains a proposal, design document, task breakdown, and spec fragments. Use the `/opsx:propose`, `/opsx:apply`, `/opsx:verify`, and `/opsx:archive` slash commands to manage the lifecycle of a change.
 
 ## Key Docs
 - `docs/NOTIFICATIONS.md` — detailed notification flow with sequence diagram

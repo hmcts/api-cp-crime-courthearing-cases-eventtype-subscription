@@ -24,10 +24,10 @@ When the artifact is published to gradle repository we end up with a jarfile and
 The files can be seen in .gradle i.e.
 ```
 find ~/.gradle -name \*.pom -ls |grep api-cp-crime | grep subscription
-... finds api-cp-crime-courthearing-cases-eventtype-subscription-0.1.0-0719c09.pom
+... finds api-cp-crime-hearing-results-document-subscription-2.0.5.pom
 
 find ~/.gradle -name \*.jar -ls |grep api-cp-crime | grep subscription
-... finds api-cp-crime-courthearing-cases-eventtype-subscription-0.1.0-0719c09.jar
+... finds api-cp-crime-hearing-results-document-subscription-2.0.5.jar
 ```
 
 To locally create a pom file showing the dependencies that will be added to the published artifact
@@ -43,7 +43,7 @@ Convert pom to gradle at site such as https://sagioto.github.io/maven2gradle/
 
 i.e. build.gradle may pull in the local jarfile and dependencies
 ```
-  implementation(files("../api-cp-crime-courthearing-cases-eventtype-subscription/./build/libs/api-cp-crime-courthearing-cases-eventtype-subscription-0.0.999.jar"))
+  implementation(files("../api-cp-crime-hearing-results-document-subscription/./build/libs/api-cp-crime-hearing-results-document-subscription-0.0.999.jar"))
   
   implementation "io.swagger.core.v3:swagger-annotations:2.2.41"
 ```
