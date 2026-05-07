@@ -793,11 +793,130 @@ components:
     EventTypesResponse:
       summary: Example Event-Types response
       value:
-        eventTypes: [{
-          eventName: WEE_CustodialSentence,
-          displayName: Warrant for Custodial Sentence,
-          category: WARRANT
-        }]
+        events:
+          - eventName: PRISON_COURT_REGISTER_GENERATED
+            displayName: Prison court register
+            category: REGISTER
+          - eventName: WEE_Layout5
+            displayName: Warrant Supplement
+            category: WARRANT
+          - eventName: NEE_DetentionOnRecommendationForDeportation
+            displayName: Detention on Recommendation for Deportation
+            category: NOTICE
+          - eventName: OEE_MedicalRemandAdditionalDetails
+            displayName: Medical Remand - Additional Details
+            category: ORDER
+          - eventName: WEE_RemandAfterBailAppealByProsecutor
+            displayName: Remand Warrant After Bail Appeal by Prosecutor
+            category: WARRANT
+          - eventName: WEE_CustodialSentence
+            displayName: Warrant for Custodial Sentence
+            category: WARRANT
+          - eventName: WEE_CustodialSentenceWitness
+            displayName: Warrant for Custodial Sentence (Witness)
+            category: WARRANT
+          - eventName: WEE_CommittalToCrownCourtForConsiderationOfTheQuestionOfBailOnAChargeOfMurder
+            displayName: Warrant of Committal to Crown Court for Consideration of the Question of Bail on a Charge of Murder
+            category: WARRANT
+          - eventName: WEE_CommittalToCrownCourtForSentence
+            displayName: Warrant of Committal to Crown Court for Sentence
+            category: WARRANT
+          - eventName: WEE_SendingToCrownCourtForTrial
+            displayName: Warrant of Sending to Crown Court for Trial
+            category: WARRANT
+          - eventName: OEE_BailAppealEndOfCustody
+            displayName: Bail Appeal - End of Custody
+            category: ORDER
+          - eventName: WEE_CommitmentPendingTransferToServiceCustody
+            displayName: Warrant of Commitment Pending Transfer to Service Custody
+            category: WARRANT
+          - eventName: WEE_NonPaymentOfMoneyOwedCivilDebt
+            displayName: Warrant of Committal for Non-Payment of Money Owed Civil Debt
+            category: WARRANT
+          - eventName: WEE_CustodyWarrantOnDischargeOfExtraditionPendingAppeal
+            displayName: Custody Warrant on Discharge of Extradition Pending Appeal
+            category: WARRANT
+          - eventName: WEE_CustodyWarrantOnDischargeOfExtraditionPendingAppealPart2
+            displayName: Custody Warrant on Discharge of Extradition Pending Appeal (Part 2)
+            category: WARRANT
+          - eventName: WEE_CustodyWarrantOnExtradition
+            displayName: Custody Warrant on Extradition
+            category: WARRANT
+          - eventName: WEE_CustodyWarrantOnExtraditionCategory2Territory
+            displayName: Custody Warrant on Extradition - Category 2 Territory
+            category: WARRANT
+          - eventName: WEE_CustodyWarrantOnExtraditionWithConsent
+            displayName: Custody Warrant on Extradition (Part 1)
+            category: WARRANT
+          - eventName: WEE_CustodyWarrantOnExtraditionWithBailDirection
+            displayName: Custody Warrant on Extradition (with Bail Direction)
+            category: WARRANT
+          - eventName: WEE_CustodyWarrantOnExtraditionWithBailDirectionWithConsent
+            displayName: Custody Warrant on Extradition with Bail Direction
+            category: WARRANT
+          - eventName: WEE_CustodyWarrantOnExtraditionWithBailDirectionCategory2Territory
+            displayName: Custody Warrant on Extradition (with Bail Direction) - Category 2 Territory
+            category: WARRANT
+          - eventName: WEE_CustodyWarrantSendingToSecretaryOfStateCategory2Territory
+            displayName: Custody Warrant Sending to Secretary of State - Category 2 Territory
+            category: WARRANT
+          - eventName: WEE_CustodyWarrantSendingToSecretaryOfStateOnConsentCategory2Territory
+            displayName: Custody Warrant Sending to Secretary of State on Consent - Category 2 Territory
+            category: WARRANT
+          - eventName: WEE_CustodyWarrantWithBailDirectionOnDischargeOfExtraditionPendingAppeal
+            displayName: Custody Warrant with Bail Direction on Discharge of Extradition Pending Appeal
+            category: WARRANT
+          - eventName: WEE_CustodyWarrantWithBailDirectionOnDischargeOfExtraditionPendingAppealPart2
+            displayName: Custody Warrant with Bail Direction on Discharge of Extradition Pending Appeal (Part 2)
+            category: WARRANT
+          - eventName: WEE_CustodyWarrantWithBailDirectionSendingToSecretaryOfStateCategory2Territory
+            displayName: Custody Warrant with Bail Direction Sending to Secretary of State - Category 2 Territory
+            category: WARRANT
+          - eventName: WEE_CustodyWarrantWithBailDirectionSendingToSecretaryOfStateOnConsentCategory2Territory
+            displayName: Custody Warrant with Bail Direction Sending to Secretary of State on Consent - Category 2 Territory
+            category: WARRANT
+          - eventName: WEE_ExtraditionRemandAfterBailAppealByProsecutor
+            displayName: Remand Warrant After Bail Appeal by Prosecutor - Extradition
+            category: WARRANT
+          - eventName: WEE_ExtraditionSupplementToCustodyWarrant
+            displayName: Supplement to Custody Warrant on Extradition
+            category: WARRANT
+          - eventName: OBE_TerminationOfFootballBanning
+            displayName: Application for Termination of Football Banning Order
+            category: ORDER
+          - eventName: OBE_ChangeOfFootballBanning
+            displayName: Change of Football Banning Order
+            category: ORDER
+          - eventName: NEE_FootballBanning
+            displayName: Notice of Football Banning Order
+            category: NOTICE
+          - eventName: WEE_Remand
+            displayName: Remand Warrant
+            category: WARRANT
+          - eventName: WXE_RemandWarrantYouthDetentionAccommodation
+            displayName: Remand Warrant - Youth Detention Accommodation
+            category: WARRANT
+          - eventName: OXE_DetentionAndTraining
+            displayName: Detention and Training Order
+            category: ORDER
+          - eventName: WEE_InjunctionDetention
+            displayName: Injunction Warrant of Detention
+            category: WARRANT
+          - eventName: OPE_SupervisionOnBreachOfDetentionAndTraining
+            displayName: Supervision on Breach of Detention and Training Order
+            category: ORDER
+          - eventName: WEE_CommittalToCrownCourtAuthorityToHoldInYouthDetentionAccommodation
+            displayName: Warrant of Committal to Crown Court - Authority to Hold in Youth Detention Accommodation
+            category: WARRANT
+          - eventName: WEE_Detention
+            displayName: Warrant of Detention
+            category: WARRANT
+          - eventName: WEE_DetentionInYouthDetentionAccommodationBreach
+            displayName: Warrant of Detention in Youth Detention Accommodation (Breach)
+            category: WARRANT
+          - eventName: WEE_SendingToCrownCourtAuthorityToHoldInYouthDetentionAccommodation
+            displayName: Warrant of Sending to Crown Court - Authority to Hold in Youth Detention Accommodation
+            category: WARRANT
 
     createSubscriptionRequest:
       summary: Example subscription creation request
