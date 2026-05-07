@@ -41,23 +41,30 @@ HMCTS must publish result events whenever:
 
 ### Subscription Registration
 
-`POST /cases/results/subscriptions`
+`POST /client-subscriptions`
 
 ```json
 {
-    "ClientSubscriptionId": "string",
-    "Events": ["ResultEventType", "..."],
-    "NotificationEndpoint": {
-      "WebhookUrl": "https://consumer.gov.uk/hooks/case-events",
-      "Auth": "string"
-    }
+    "notificationEndpoint": {
+      "callbackUrl": "https://consumer.gov.uk/hooks/case-events"
+    },
+    "eventTypes": ["PRISON_COURT_REGISTER_GENERATED"]
 }
 ```
 
-Response:
+Response (201 Created):
 ```json
 {
-  "subscriptionId": "{UUID}"
+  "clientSubscriptionId": "{UUID}",
+  "notificationEndpoint": {
+    "callbackUrl": "https://consumer.gov.uk/hooks/case-events"
+  },
+  "eventTypes": ["PRISON_COURT_REGISTER_GENERATED"],
+  "hmac": {
+    "keyId": "kid-v1-{UUID}",
+    "secret": "<base64-encoded-secret — returned once, cannot be retrieved again>"
+  },
+  "createdAt": "2025-01-01T10:00:00Z"
 }
 ```
 
@@ -73,11 +80,11 @@ These events will ultimately replace the existing email “action point”.
 
 ### Webhook Delivery Requirements
 
-* Consumer must provide HTTPS POST endpoint.
-* API Marketplace will sign webhook deliveries (HMAC header).
+* Consumer must provide HTTPS POST endpoint (no HTTP).
+* Service signs every webhook delivery with HMAC-SHA256. Each request includes `X-Key-Id` (key identifier) and `X-Signature` (base64-encoded HMAC). The secret is issued once at subscription creation and stored in Azure KeyVault; it can be rotated via `POST /client-subscriptions/{clientSubscriptionId}/secret/rotate`.
 * Consumer must return 2xx to acknowledge.
-* Retries managed by Worker with exponential backoff - 3 tries over 15 minutes.
-* Failures routed to DLQ - DLQs will be kept per subscription for 28 days, then they will be purged.
+* Retries managed by Worker with configured delays: 0 ms, 1 s, 2 s, 10 s, 30 s, 60 s — up to 5 attempts total.
+* Failures exceeding retry limit are routed to Azure Service Bus Dead Letter Queue (DLQ).
 
 #### Sequence Diagrams: Subscription Registration and Retrieval
 
@@ -86,21 +93,21 @@ sequenceDiagram
     
     participant Consumer as Remand and Sentencing Service (HMPPS)
     participant APIM as API Management (Gateway)
-    participant CCRS as Crime Court Hearing Cases<br/>Results Subscription
+    participant CCRS as Crime Hearing Results<br/>Subscription Service
     
 
     Note over Consumer,CCRS: Subscription Registration
 
-    Consumer->>APIM: POST /cases/results/subscriptions<br/>{ClientSubscriptionId, Events[], NotificationEndpoint}
+    Consumer->>APIM: POST /client-subscriptions<br/>{notificationEndpoint.callbackUrl, eventTypes[]}
     APIM->>CCRS: Validate subscription request
-    CCRS->>CCRS: Create subscription record (subscriptionId)
-    CCRS-->>Consumer: 201 Created<br/>{subscriptionId}
+    CCRS->>CCRS: Create subscription record (clientSubscriptionId)<br/>Generate HMAC keypair, store secret in KeyVault
+    CCRS-->>Consumer: 201 Created<br/>{clientSubscriptionId, hmac.keyId, hmac.secret (once only)}
 
     Note over Consumer,CCRS: Retrieve Subscription
 
-    Consumer->>CCRS: GET /cases/results/subscriptions/{subscriptionId}
+    Consumer->>APIM: GET /client-subscriptions/{clientSubscriptionId}
     APIM->>CCRS: 
-    CCRS-->>Consumer: 200 OK<br/>{subscription details}
+    CCRS-->>Consumer: 200 OK<br/>{clientSubscriptionId, notificationEndpoint, eventTypes, createdAt}
 
 ```
 
@@ -110,24 +117,30 @@ sequenceDiagram
 sequenceDiagram
     autonumber
 
-    participant Webhook as RaSS (HMPPS)<br/>Webhook Endpoint
+    participant HN as Hearing NOWs /<br/>Progression Service
+    participant CCRS as Crime Hearing Results<br/>Subscription Service
+    participant ASB as Azure Service Bus
+    participant MS as Material Service
     participant APIM as API Management (Gateway)
-    
-    participant CCRS as Crime Courthearing Cases<br/>Results Subscription<br/>(Worker)
-    participant AB as Azure Service Bus
+    participant Webhook as Consumer Webhook<br/>(RaSS, YCS)
 
-    participant FILTER as Courthearing Cases Result<br/>Event Subscription Filter
-    participant ART as Artemis
+    HN->>CCRS: POST /notifications\n(eventId, materialId, eventType, defendant)
+    CCRS->>ASB: Enqueue → hrds.notifications.inbound
+    CCRS-->>HN: 202 Accepted
 
-    FILTER-->>ART: Listening: Result Events
-    FILTER->>FILTER: Filter messages to only include those<br/>relevant to the consumer’s interests or subscriptions.
-    FILTER->>AB: Publish messages to queue
-    CCRS-->>AB: Listening: Pop Results messages
-    
-    Note over CCRS,Webhook: Producer publishes result events
-    CCRS->>APIM: Case Result Event
-    
-    APIM-->>Webhook: Consumer: Deliver result event<br/>(asynchronously)
+    ASB-->>CCRS: Dequeue inbound event
+    CCRS->>MS: GET material metadata + SAS URL
+    MS-->>CCRS: metadata + SAS URL
+    CCRS->>CCRS: Record documentId mapping\nFind subscribers for eventType
+
+    loop For each subscriber
+        CCRS->>ASB: Enqueue signed payload → hrds.notifications.outbound\n(X-Key-Id, X-Signature, EventNotificationPayload)
+    end
+
+    ASB-->>CCRS: Dequeue outbound message
+    CCRS->>APIM: POST callbackUrl\n(X-Key-Id, X-Signature headers)
+    APIM-->>Webhook: Forward webhook
+    Webhook-->>APIM: 2xx Accepted
 ```
 
 ## Authentication
@@ -169,73 +182,57 @@ Invalid tokens are rejected with HTTP 401 Unauthorized.
 
 ### Webhook Authentication
 
-When delivering events to consumer webhook endpoints (e.g., RaSS), Common Platform must authenticate using the mechanism specified by HMPPS. See: https://ministryofjustice.github.io/hmpps-integration-api/authentication.html
+When delivering events to consumer webhook endpoints, the service authenticates each callback using **HMAC-SHA256 signing**:
 
-HMPPS requires two complementary authentication methods:
+1. At subscription creation, the service generates an HMAC keypair and returns the secret once in the response body. The secret is stored in Azure KeyVault and cannot be retrieved again via the API.
+2. On each webhook delivery, the service retrieves the secret from KeyVault, signs the `EventNotificationPayload` JSON body, and includes the result in the request headers:
+   - `X-Key-Id` — identifies which key was used (allows consumers to handle key rotation)
+   - `X-Signature` — base64-encoded HMAC-SHA256 of the request body
 
-1. **Mutual TLS (mTLS)**: Common Platform must present a TLS certificate issued by HMPPS when making webhook requests
-2. **API Key**: Include an `x-api-key` HTTP header containing the API key provided by HMPPS (not Base64 encoded)
+Consumers verify the signature using the shared secret to confirm the webhook originated from HMCTS.
 
-**Setup Process:**
-1. HMPPS issues a TLS certificate and API key to Common Platform
-2. Common Platform stores these credentials securely (e.g., Azure Key Vault)
-3. When delivering webhook events, Common Platform presents the TLS certificate and includes the API key header
+Secrets can be rotated via `POST /client-subscriptions/{clientSubscriptionId}/secret/rotate`. The new secret is returned once and the old key is deactivated.
 
 **Security Requirements:**
-- All communication over TLS 1.2 or higher
-- Credentials must be stored securely (e.g., Azure Key Vault)
-- Rotate credentials periodically
+- All webhook URLs must use HTTPS (`^https://.*$`); HTTP is rejected at subscription creation
+- Credentials stored in Azure KeyVault
+- Rotate secrets periodically via the rotation endpoint
 - Log authentication failures for security monitoring
-
-
-# *******************************************************************
-# TODO: THE BELOW IS A SEPARATE API DEFINITION - MOVE TO CORRECT REPO
-# *******************************************************************
-
 
 ### Document Retrieval Process
 
-After receiving an event, the consumer (RaSS) will:
-1.	Receive webhook POST event containing only the event ID.
-2.	MVP behaviour:
-3.  * Query AMP to retrieve full event details via: `GET /cases/{case_id}/results/{event_id}`
-    * **NOTE:** the underlying service must only allow retrieval of subscription-relevant events.
-3.	Request the document via the streaming API: `GET /cases/{case_id}/results/{event_id}/document`
+After receiving a webhook event containing `documentId`, the consumer retrieves the document via:
+
+`GET /client-subscriptions/{clientSubscriptionId}/documents/{documentId}`
+
+The service verifies the subscription has access to that document, fetches the content from the Material Service, and streams the PDF to the caller.
 
 ```mermaid
 
 sequenceDiagram
     autonumber
 
-    participant Consumer as RaSS (HMPPS)
-    participant Webhook as RaSS (HMPPS)<br/>Webhook Endpoint
+    participant Consumer as RaSS / YCS (HMPPS)
     participant APIM as API Management (Gateway)
-    participant CCRS as Crime Courthearing Cases<br/>Results Subscription<br/>(Worker)
-    participant DocStore as Azure Storage<br/>Document Store
+    participant CCRS as Crime Hearing Results<br/>Subscription Service
+    participant MS as Material Service
 
-    Note over APIM,Webhook: Producer publishes result events
-    CCRS->>APIM: Case Result Event<br/>{eventId}
+    Note over APIM,Consumer: Webhook received with documentId
 
-    APIM-->>Webhook: Consumer: Deliver event notification<br/>{eventId only}
-
-    Note over Consumer,APIM: Event Details Retrieval
-
-    Consumer->>APIM: GET /cases/{caseId}/results/{eventId}
-    APIM-->>Consumer: 200 OK<br/>{full event metadata}
-
-    Note over Consumer,DocStore: Document Retrieval via Streaming API
-
-    Consumer->>APIM: GET /cases/{caseId}/results/{eventId}/document
+    Consumer->>APIM: GET /client-subscriptions/{clientSubscriptionId}/documents/{documentId}
     APIM->>CCRS: Forward request
-    CCRS->>DocStore: Retrieve document
-    DocStore-->>CCRS: Document stream
-    CCRS-->>APIM: Document stream
-    APIM-->>Consumer: 200 OK<br/>PDF Document Stream
+    CCRS->>CCRS: Verify subscription access
+    CCRS->>MS: GET /material/{materialId}/metadata
+    MS-->>CCRS: metadata
+    CCRS->>MS: GET /material/{materialId}/content (SAS URL)
+    MS-->>CCRS: SAS URL
+    CCRS->>MS: Fetch PDF from SAS URL
+    MS-->>CCRS: PDF bytes
+    CCRS-->>APIM: PDF stream
+    APIM-->>Consumer: 200 OK — PDF Document
 
     Note over Consumer: Consumer stores PDF locally<br/>(S3 or equivalent)
 ```
-
-Future enhancements will expand JSON payload richness so prisons rely less on PDFs.
 
 **Important Note:**
 The PDF remains the operational currency today.
@@ -244,14 +241,14 @@ Until the operational process changes, this must remain part of the producer–c
 #### Document Retrieval Requirements
 
 * Documents must not be embedded in any JSON event payload.
-* API provides a streaming endpoint for document retrieval: `GET /cases/{case_id}/results/{event_id}/document`
-* HMCTS document storage remains the source of truth.
-* Prisons will store a local copy (AWS S3) to support their workflow automation.
+* API provides a streaming endpoint for document retrieval: `GET /client-subscriptions/{clientSubscriptionId}/documents/{documentId}`
+* Material Service (HMCTS document storage) remains the source of truth; the service proxies requests using time-limited SAS URLs.
+* Consumers may store a local copy to support their workflow automation.
 
 **Benefits**
 
 * Digital transfer supports prisoner movement between establishments.
-* Reduces the amount of repeated document requests to HMCTS.
+* Reduces repeated document requests to HMCTS.
 * Provides traceability and reduces “missing document” incidents.
 
 ### Reliability & Failure Handling
@@ -266,16 +263,6 @@ Delivery Guarantees
 * Ability for consumers to inspect DLQs
 * Ability for consumers to replay DLQs once systems recover
 
-#### DLQ Inspection
-
-`GET /cases/results/subscriptions/{subscriptionId}/events`
-
-#### DLQ Replay
-
-`POST /cases/results/subscriptions/{subscriptionId}/events/replay`
-
-This strictly aligns replay with the subscription that owns the events.
-
 ```mermaid
 
 sequenceDiagram
@@ -283,47 +270,26 @@ sequenceDiagram
 
     participant Consumer as RaSS (HMPPS)
     participant APIM as API Management (Gateway)
-    participant Worker as Crime Courthearing Cases<br/>Results Subscription<br/>(Worker)
-
-    participant DLQ as Dead-Letter Queue
-    participant AB as Azure Service Bus
+    participant Worker as Crime Hearing Results<br/>Subscription Service (Worker)
+    participant ASB as Azure Service Bus
+    participant DLQ as Azure Service Bus DLQ
 
     Note over APIM,Worker: Event Published
 
-    Worker->>APIM: POST Case Result Event
+    Worker->>APIM: POST callbackUrl (webhook)
     APIM->>Consumer: Deliver webhook event
 
     alt Consumer Unavailable or Delivery Failure
         Consumer--x APIM: Delivery fails
-        Worker->>Worker: Retry with exponential backoff
-        Worker--x APIM: Retry attempt<br/>(still failing)
+        Worker->>ASB: Re-enqueue with delay\n(0s → 1s → 2s → 10s → 30s → 60s)
+        Worker--x APIM: Retry attempt<br/>(still failing after 5 attempts)
 
-        Note over Worker,DLQ: Event moved to DLQ after final retry
+        Note over Worker,DLQ: Message moved to DLQ after 5 attempts
 
-        Worker->>DLQ: Move undeliverable event
+        ASB->>DLQ: Move undeliverable message
     else Delivery Successful
-        Consumer-->>APIM: 200 OK<br/>(event accepted)
+        Consumer-->>APIM: 2xx Accepted
     end
-
-    Note over Consumer,DLQ: DLQ Inspection
-
-    Consumer->>APIM: GET /cases/results/subscriptions/{subscriptionId}/events
-    APIM->>DLQ: Retrieve DLQ events
-    DLQ-->>APIM: Return stored failed events
-    APIM-->>Consumer: 200 OK<br/>{events[]}
-
-    Note over Consumer,DLQ: DLQ Replay
-
-    Consumer->>APIM: POST /cases/results/subscriptions/{subscriptionId}/events/replay
-
-    APIM->>+Worker: Request replay of events
-    Worker-->>AB: Add DLQ events to Queue for replay
-    Worker-->>-APIM: HTTP Accepted 202
-    APIM-->>Consumer: HTTP Accepted 202
-
-    Note over APIM,Worker: (Replayed) Event Published
-    Worker->>APIM: POST Case Result Event
-    APIM->>Consumer: Deliver webhook event
 ```
 
 ## Event Filtering Requirements
@@ -360,7 +326,7 @@ The new system must:
 
 ## Additional Future Considerations
 
-* Discoverable list of event types: GET /cases/results/event-types
+* Discoverable list of event types: GET /event-types (implemented)
 * Potential expansion to other justice partners (DWP, Probation)
 * Multi-consumer patterns enabled via API Marketplace
 
