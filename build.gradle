@@ -1,10 +1,10 @@
 plugins {
   id 'java'
-  id 'org.openapi.generator' version '7.21.0'
+  id 'org.openapi.generator' version '7.22.0'
   id 'com.diffplug.spotless' version '8.4.0'
   id 'jacoco'
   id 'maven-publish'
-  id "com.github.ben-manes.versions" version "0.53.0"
+  id "com.github.ben-manes.versions" version "0.54.0"
   id "org.cyclonedx.bom" version "3.2.4"
   id 'pmd'
 }
@@ -24,10 +24,10 @@ apply {
 
 dependencies {
   // Java core
-  compileOnly 'org.projectlombok:lombok:1.18.44'
-  testCompileOnly 'org.projectlombok:lombok:1.18.44'
-  annotationProcessor 'org.projectlombok:lombok:1.18.44'
-  testAnnotationProcessor 'org.projectlombok:lombok:1.18.44'
+  compileOnly 'org.projectlombok:lombok:1.18.46'
+  testCompileOnly 'org.projectlombok:lombok:1.18.46'
+  annotationProcessor 'org.projectlombok:lombok:1.18.46'
+  testAnnotationProcessor 'org.projectlombok:lombok:1.18.46'
   testImplementation(platform('org.junit:junit-bom:6.0.3'))
   testImplementation 'org.junit.jupiter:junit-jupiter-api'
   testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
@@ -36,19 +36,19 @@ dependencies {
 
 
   // Spring Boot Core
-  compileOnly 'org.springframework.boot:spring-boot-starter-web:4.0.5'
-  testImplementation 'org.springframework.boot:spring-boot-starter-web:4.0.5'
-  compileOnly 'org.springframework.boot:spring-boot-starter-validation:4.0.5'
-  testImplementation 'org.springframework.boot:spring-boot-starter-validation:4.0.5'
-  testImplementation 'org.springframework.boot:spring-boot-starter-test:4.0.5'
+  compileOnly 'org.springframework.boot:spring-boot-starter-web:4.0.6'
+  testImplementation 'org.springframework.boot:spring-boot-starter-web:4.0.6'
+  compileOnly 'org.springframework.boot:spring-boot-starter-validation:4.0.6'
+  testImplementation 'org.springframework.boot:spring-boot-starter-validation:4.0.6'
+  testImplementation 'org.springframework.boot:spring-boot-starter-test:4.0.6'
 
 
   // OpenApi Client
-  compileOnly 'org.openapitools:openapi-generator-core:7.21.0'
-  compileOnly 'io.swagger.parser.v3:swagger-parser:2.1.39'
+  compileOnly 'org.openapitools:openapi-generator-core:7.22.0'
+  compileOnly 'io.swagger.parser.v3:swagger-parser:2.1.41'
 
 
   // See docs/DEPENDENCIES.md that explains why we have JUST ONE implementation / published dependency
   // The rest are not included in published dependencies
-  implementation 'io.swagger.core.v3:swagger-annotations:2.2.47'
+  implementation 'io.swagger.core.v3:swagger-annotations:2.2.49'
 }
