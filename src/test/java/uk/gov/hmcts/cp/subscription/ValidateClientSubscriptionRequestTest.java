@@ -57,21 +57,22 @@ public class ValidateClientSubscriptionRequestTest {
     }
 
     @Test
+    void validate_request_should_accept_http_url() {
+        ClientSubscriptionRequest request = ClientSubscriptionRequest.builder()
+                .eventTypes(List.of("PRISON_COURT_REGISTER_GENERATED"))
+                .notificationEndpoint(NotificationEndpoint.builder().callbackUrl("http://callback-url").build())
+                .build();
+        Set<ConstraintViolation<ClientSubscriptionRequest>> errors = validator.validate(request);
+        assertThat(errors.size()).isEqualTo(0);
+    }
+
+    @Test
     void validate_request_should_reject_bad_url() {
         ClientSubscriptionRequest request = ClientSubscriptionRequest.builder()
                 .eventTypes(List.of("PRISON_COURT_REGISTER_GENERATED"))
                 .notificationEndpoint(NotificationEndpoint.builder().callbackUrl("bad-url").build())
                 .build();
-        validate_request_error(request, "must match \"^https://.*$\"");
-    }
-
-    @Test
-    void validate_request_should_reject_none_https_url() {
-        ClientSubscriptionRequest request = ClientSubscriptionRequest.builder()
-                .eventTypes(List.of("PRISON_COURT_REGISTER_GENERATED"))
-                .notificationEndpoint(NotificationEndpoint.builder().callbackUrl("http://bad-url").build())
-                .build();
-        validate_request_error(request, "must match \"^https://.*$\"");
+        validate_request_error(request, "must match \"^https?://.*$\"");
     }
 
     private void validate_request_error(ClientSubscriptionRequest request, String expectedError) {

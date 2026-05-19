@@ -566,7 +566,7 @@ components:
       properties:
         callbackUrl:
           type: string
-          pattern: '^https://.*$'
+          pattern: '^https?://.*$'
           description: The location where event data will be sent. Event notifications will be POSTed to this URL with EventNotificationPayload in the request body.
 
     EventTypeResponse:
