@@ -483,7 +483,7 @@ paths:
 
   /client-subscriptions/{clientSubscriptionId}/hearing-events/{hearingEventId}:
     get:
-      summary: Retrieve structured PCR payload for a notification
+      summary: Retrieve structured PCR/Nows payload for a notification
       description: Returns the full structured document payload for the given per-subscriber hearingEventId. Access is implicitly scoped — a subscriber can only retrieve their own notifications.
       operationId: getHearingEvent
       tags:
