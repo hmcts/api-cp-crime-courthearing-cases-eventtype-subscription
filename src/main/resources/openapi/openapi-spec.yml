@@ -481,6 +481,62 @@ paths:
             X-Correlation-Id:
               $ref: '#/components/headers/XCorrelationId'
 
+  /client-subscriptions/{clientSubscriptionId}/hearing-events/{hearingEventId}:
+    get:
+      summary: Retrieve structured PCR payload for a notification
+      description: Returns the full structured document payload for the given per-subscriber hearingEventId. Access is implicitly scoped — a subscriber can only retrieve their own notifications.
+      operationId: getHearingEvent
+      tags:
+        - Notification
+      parameters:
+        - name: clientSubscriptionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Subscriber's client subscription identifier
+        - name: hearingEventId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Per-subscriber hearing event identifier received in the callback
+        - $ref: '#/components/parameters/XCorrelationId'
+      responses:
+        '200':
+          description: Structured document payload for the requested hearing event
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HearingEventResponse'
+              examples:
+                getHearingEventResponse:
+                  $ref: '#/components/examples/getHearingEventResponse'
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/XCorrelationId'
+        '404':
+          description: Not found — hearingEventId does not exist, does not belong to this subscriber, or the feature is disabled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/XCorrelationId'
+        '401':
+          description: Unauthorized - missing or invalid authentication credentials
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/XCorrelationId'
+        '403':
+          description: Forbidden - valid subscription key required but not subscribed to this API
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/XCorrelationId'
+
 components:
   securitySchemes:
     bearerAuth:
@@ -665,6 +721,31 @@ components:
         message:
           type: string
 
+    HearingEventResponse:
+      type: object
+      required:
+        - hearingEventId
+        - eventType
+        - createdAt
+        - payload
+      properties:
+        hearingEventId:
+          type: string
+          format: uuid
+          description: Per-subscriber identifier for this notification, received in the callback
+          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        eventType:
+          $ref: '#/components/schemas/EventType'
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when this notification was created
+          example: "2026-05-13T10:00:00Z"
+        payload:
+          type: object
+          additionalProperties: true
+          description: Full structured document payload. Shape varies by eventType.
+
     EventPayload:
       type: object
       description:
@@ -672,6 +753,7 @@ components:
       required:
         - eventId
         - materialId
+        - hearingId
         - eventType
         - timestamp
         - defendant
@@ -734,18 +816,28 @@ components:
                   urn:
                     type: string
                     description: Case URN associated with the defendant
+        payload:
+          type: object
+          additionalProperties: true
+          description: Full structured document payload. When provided, stored and later served to subscribers via the hearing-events endpoint.
 
     EventNotificationPayload:
       type: object
-      description: Payload sent to the callback URL when an event occurs
+      description: Callback payload delivered to the subscriber. Contains the hearingEventId to retrieve the full structured payload via the hearing-events endpoint.
       required:
         - eventType
+        - hearingId
         - cases
         - masterDefendantId
         - documentId
         - documentGeneratedTimestamp
         - prisonEmailAddress
       properties:
+        hearingEventId:
+          type: string
+          format: uuid
+          description: Per-subscriber identifier for retrieving the full structured payload via GET /client-subscriptions/{clientSubscriptionId}/hearing-events/{hearingEventId}.
+          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
         eventType:
           description: Type of the event that triggered this notification
           example: "PRISON_COURT_REGISTER_GENERATED"
@@ -982,33 +1074,141 @@ components:
       value:
         eventId: '3fa85f64-5717-4562-b3fc-2c963f66afa6'
         materialId: '123e4567-e89b-12d3-a456-426614174000'
+        hearingId: '7f3b0726-ab6e-8579-2bb4-dd0870bcbf5a'
         eventType: 'PRISON_COURT_REGISTER_GENERATED'
         timestamp: '2024-01-15T10:30:00Z'
         defendant:
           masterDefendantId: '8b8f1c3a-9a41-4f0f-b8a0-1c23d9e8a111'
           name: 'John Doe'
-          dateOfBirth: '1990-05-15'
+          dateOfBirth: '1990-01-01'
           custodyEstablishmentDetails:
-            emailAddress: 'prison@moj.gov.uk'
+            emailAddress: 'prison@example.com'
           cases:
             - urn: 'CT98KRYCAP'
             - urn: 'AB75123123'
+        payload:
+          amendmentDate: "2020-04-15"
+          applicants:
+            - title: "Mr"
+              firstName: "Crown"
+              lastName: "Prosecution Service"
+              name: "Crown Prosecution Service"
+              landlineNumber: "01632 960000"
+              address:
+                line1: "Rose Court"
+                line2: "2 Southwark Bridge"
+                line3: "London"
+                postCode: "SE1 9HS"
+          caseApplicationReferences:
+            - "CPS/2020/001234"
+          cases:
+            - reference: "TFL15746USFY2"
+              defendantCaseOffences:
+                - title: "Use / install a television set without a licence"
+                  legislation: "Contrary to section 363(2) and (4) of the Communications Act 2003."
+                  civilOffence: false
+                  convictionDate: "2020-03-09"
+                  startDate: "2020-01-01"
+                  results:
+                    - label: "Fine"
+                      welshLabel: "Dirwy"
+                      primary: true
+                      publishedForNows: true
+                      resultIdentifier: "1002"
+                      resultDefinitionGroup: "Financial"
+                      resultText: "Fine imposed"
+                      resultWording: "The defendant is fined £12."
+                      sequence: 1
+                      prompts:
+                        - label: "Amount of fine"
+                          value: "£12"
+                          promptIdentifier: "FINE_AMOUNT"
+          civilNow: false
+          courtClerkName: "Erica Wilson"
+          defendant:
+            name: "John Doe"
+            dateOfBirth: "1990-01-01"
+            address:
+              line1: "Flat 1, Armageddon House"
+              line2: "13 Old Road"
+              line3: "Giggleswick"
+              postCode: "SW11 1AB"
+          financialOrderDetails:
+            paymentTerms: "Instalments only with instalment amount 20, monthly, instalment start date 2020-07-11"
+            enforcementPhoneNumber: "020 7556 8500"
+            totalAmountImposed: "£12"
+            totalBalance: "£12"
+          orderDate: "2024-01-15"
+          orderName: "Prison Court Register"
+          orderingCourt:
+            ljaCode: "2577"
+            courtCentreName: "Lavender Hill Magistrates' Court"
+            welshCourtCentre: false
+            address:
+              line1: "176A Lavender Hill"
+              line2: "London"
+              postCode: "SW11 1JU"
 
     NowsCustodialSentence:
       summary: Nows example
       value:
         eventId: 'b37c7a93-4063-40e5-9b0a-0230a3cc2005'
         materialId: '297b5c16-0983-405c-9128-614554b1c4fe'
+        hearingId: 'a4c1e832-df72-4b3a-9cc5-ee1981dcaf17'
         eventType: 'WEE_CustodialSentence'
         timestamp: '2025-02-15T10:40:00Z'
         defendant:
           masterDefendantId: '8b8f1c3a-9a41-4f0f-b8a0-1c23d9e8a111'
           name: 'John Doe'
-          dateOfBirth: '1990-05-15'
+          dateOfBirth: '1990-01-01'
           custodyEstablishmentDetails:
-            emailAddress: 'prison@moj.gov.uk'
+            emailAddress: 'prison@example.com'
           cases:
             - urn: 'CT98KRYCAP'
+        payload:
+          amendmentDate: "2020-04-15"
+          cases:
+            - reference: "TFL15746USFY2"
+              defendantCaseOffences:
+                - title: "Custodial Sentence"
+                  legislation: "Contrary to section 152 of the Criminal Justice Act 2003."
+                  civilOffence: false
+                  convictionDate: "2025-02-15"
+                  startDate: "2025-02-15"
+                  results:
+                    - label: "Custodial Sentence"
+                      welshLabel: "Dedfryd Garchardol"
+                      primary: true
+                      publishedForNows: true
+                      resultIdentifier: "1081"
+                      resultDefinitionGroup: "Custodial"
+                      resultText: "Custodial sentence imposed"
+                      resultWording: "The defendant is sentenced to 6 months imprisonment."
+                      sequence: 1
+                      prompts:
+                        - label: "Length of sentence"
+                          value: "6 months"
+                          promptIdentifier: "SENTENCE_LENGTH"
+          civilNow: false
+          courtClerkName: "Erica Wilson"
+          defendant:
+            name: "John Doe"
+            dateOfBirth: "1990-01-01"
+            address:
+              line1: "Flat 1, Armageddon House"
+              line2: "13 Old Road"
+              line3: "Giggleswick"
+              postCode: "SW11 1AB"
+          orderDate: "2025-02-15"
+          orderName: "Warrant for Custodial Sentence"
+          orderingCourt:
+            ljaCode: "2577"
+            courtCentreName: "Lavender Hill Magistrates' Court"
+            welshCourtCentre: false
+            address:
+              line1: "176A Lavender Hill"
+              line2: "London"
+              postCode: "SW11 1JU"
 
     rotateSecretRequest:
       summary: Example secret rotation request
@@ -1020,4 +1220,111 @@ components:
       value:
         keyId: "kid-v1-b41a48b7-a2a1-45f1-b562-1358f141ddb2"
         secret: "new-example-base64-encoded-secret"
+
+    getHearingEventResponse:
+      summary: Example GET hearing event response
+      value:
+        hearingEventId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        eventType: "PRISON_COURT_REGISTER_GENERATED"
+        createdAt: "2026-05-13T10:00:00Z"
+        payload:
+          amendmentDate: "2020-04-15"
+          applicants:
+            - title: "Mr"
+              firstName: "Crown"
+              middleName: null
+              lastName: "Prosecution Service"
+              name: "Crown Prosecution Service"
+              dateOfBirth: null
+              landlineNumber: "01632 960000"
+              mobileNumber: null
+              address:
+                line1: "Rose Court"
+                line2: "2 Southwark Bridge"
+                line3: "London"
+                line4: null
+                postCode: "SE1 9HS"
+          caseApplicationReferences:
+            - "CPS/2020/001234"
+          cases:
+            - reference: "TFL15746USFY2"
+              defendantCaseOffences:
+                - title: "Use / install a television set without a licence"
+                  legislation: "Contrary to section 363(2) and (4) of the Communications Act 2003."
+                  civilOffence: false
+                  convictionDate: "2020-03-09"
+                  displayText: "String2"
+                  wording: "On 02/07/2015 At threadneedle street EC2 Being a passenger on a Public service Vehicle..."
+                  startDate: "2020-01-01"
+                  results:
+                    - label: "Fine"
+                      welshLabel: "Dirwy"
+                      primary: true
+                      publishedForNows: true
+                      resultIdentifier: "1002"
+                      resultDefinitionGroup: "Financial"
+                      resultText: "Fine imposed"
+                      resultWording: "The defendant is fined £12."
+                      welshResultWording: "Dirwywyd y diffynnydd £12."
+                      sequence: 1
+                      prompts:
+                        - label: "Amount of fine"
+                          welshLabel: "Swm y ddirwy"
+                          value: "£12"
+                          welshValue: "£12"
+                          promptIdentifier: "FINE_AMOUNT"
+                          promptReference: "P001"
+                      nowRequirementText:
+                        - label: "contactDetails"
+                          value: "Telephone: 0300 303 0656  (Monday to Friday 9am to 5pm)"
+              defendantCaseResults:
+                - label: "Surcharge"
+                  welshLabel: "Gordal"
+                  prompts:
+                    - label: "Amount of surcharge"
+                      value: "£12"
+          civilNow: false
+          courtClerkName: "Erica Wilson"
+          defendant:
+            name: "Jane Doe"
+            dateOfBirth: "1957-01-01"
+            address:
+              line1: "Flat 1, Armageddon House"
+              line2: "13 Old Road"
+              line3: "Giggleswick"
+              line4: "Merton"
+              postCode: "SW11 1AB"
+          financialOrderDetails:
+            paymentTerms: "Instalments only with instalment amount 20, monthly, instalment start date 2020-07-11"
+            enforcementPhoneNumber: "020 7556 8500"
+            enforcementAddress:
+              line1: "LCCC Enforcement Unit"
+              line2: "P.O. Box 31089"
+              line3: "London"
+              postCode: "SW1P 3WT"
+            enforcementEmail: "enforcement@example.com"
+            accountingDivisionCode: 77
+            bacsBankName: "HMCTS LCCC"
+            bacsSortCode: "56-00-33"
+            bacsAccountNumber: "27049175"
+            totalAmountImposed: "NaN"
+            totalBalance: "NaN"
+          nextHearingCourtDetails:
+            hearingDate: "2020-03-09T10:00:00Z"
+            courtName: "Lavender Hill Magistrates' Court"
+            courtAddress:
+              line1: "176A Lavender Hill"
+              line2: "London"
+              postCode: "SW11 1JU"
+          orderDate: "2020-04-12"
+          orderName: "Notice of Financial Penalty"
+          orderingCourt:
+            ljaCode: "2577"
+            courtCentreName: "Lavender Hill Magistrates' Court"
+            welshCourtCentre: false
+            address:
+              line1: "176A Lavender Hill"
+              line2: "London"
+              postCode: "SW11 1JU"
+          welshOrderName: "Rhybudd o gosb ariannol"
 

@@ -16,6 +16,6 @@ openApiGenerate {
     useTags                             : "true",   // use tag for api name
     generatedConstructorWithRequiredArgs: "false",  // else conflicts with lombok AllArgsConstructor
     openApiNullable                     : "false",  // else generates classes JsonNullable imports
-    additionalModelTypeAnnotations      : "@lombok.Builder;@lombok.AllArgsConstructor;@lombok.NoArgsConstructor",
+    additionalModelTypeAnnotations      : "@lombok.Builder;@lombok.AllArgsConstructor;@lombok.NoArgsConstructor;@com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)",
   ]
 }
