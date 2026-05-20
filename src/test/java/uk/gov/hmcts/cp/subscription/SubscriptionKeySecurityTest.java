@@ -85,6 +85,7 @@ class SubscriptionKeySecurityTest {
         assertEndpointHasResponseCode(paths, "/client-subscriptions/{clientSubscriptionId}", "put", "401");
         assertEndpointHasResponseCode(paths, "/client-subscriptions/{clientSubscriptionId}", "delete", "401");
         assertEndpointHasResponseCode(paths, "/client-subscriptions/{clientSubscriptionId}/documents/{documentId}", "get", "401");
+        assertEndpointHasResponseCode(paths, "/client-subscriptions/{clientSubscriptionId}/hearing-events/{hearingEventId}", "get", "401");
     }
 
     @Test
@@ -98,6 +99,20 @@ class SubscriptionKeySecurityTest {
         assertEndpointHasResponseCode(paths, "/client-subscriptions/{clientSubscriptionId}", "put", "403");
         assertEndpointHasResponseCode(paths, "/client-subscriptions/{clientSubscriptionId}", "delete", "403");
         assertEndpointHasResponseCode(paths, "/client-subscriptions/{clientSubscriptionId}/documents/{documentId}", "get", "403");
+        assertEndpointHasResponseCode(paths, "/client-subscriptions/{clientSubscriptionId}/hearing-events/{hearingEventId}", "get", "403");
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void event_notification_payload_hearingEventId_should_be_optional() {
+        Map<String, Object> components = (Map<String, Object>) spec.get("components");
+        Map<String, Object> schemas = (Map<String, Object>) components.get("schemas");
+        Map<String, Object> schema = (Map<String, Object>) schemas.get("EventNotificationPayload");
+        List<String> required = (List<String>) schema.get("required");
+
+        assertThat(required)
+                .as("hearingEventId must not be in EventNotificationPayload required array — service omits it when toggle is off")
+                .doesNotContain("hearingEventId");
     }
 
     @SuppressWarnings("unchecked")
