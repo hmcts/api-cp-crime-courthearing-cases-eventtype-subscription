@@ -18,8 +18,6 @@ import uk.gov.hmcts.cp.openapi.model.EventPayload;
 import uk.gov.hmcts.cp.openapi.model.EventPayloadDefendant;
 import uk.gov.hmcts.cp.openapi.model.RotateSecretRequest;
 
-import java.util.Map;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
@@ -130,7 +128,7 @@ class OpenAPISpecTest {
         assertThat(EventPayload.class.getDeclaredField("hearingId").getType()).isEqualTo(UUID.class);
         assertThat(EventPayload.class.getDeclaredField("eventType").getType()).isEqualTo(String.class);
         assertThat(EventPayload.class.getDeclaredField("timestamp").getType()).isEqualTo(Instant.class);
-        assertThat(EventPayload.class.getDeclaredField("payload").getType()).isEqualTo(Map.class);
+        assertThat(EventPayload.class.getDeclaredField("payload").getType()).isEqualTo(String.class);
 
         assertThat(EventPayloadDefendant.class.getDeclaredField("masterDefendantId").getType()).isEqualTo(UUID.class);
         assertThat(EventPayloadDefendant.class.getDeclaredField("name").getType()).isEqualTo(String.class);
