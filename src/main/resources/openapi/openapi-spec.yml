@@ -742,8 +742,7 @@ components:
           description: Timestamp when this notification was created
           example: "2026-05-13T10:00:00Z"
         payload:
-          type: object
-          additionalProperties: true
+          type: string
           description: Full structured document payload. Shape varies by eventType.
 
     EventPayload:

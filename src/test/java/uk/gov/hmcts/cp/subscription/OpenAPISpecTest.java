@@ -156,7 +156,7 @@ class OpenAPISpecTest {
         assertThat(HearingEventResponse.class.getDeclaredField("hearingEventId").getType()).isEqualTo(UUID.class);
         assertThat(HearingEventResponse.class.getDeclaredField("eventType").getType()).isEqualTo(String.class);
         assertThat(HearingEventResponse.class.getDeclaredField("createdAt").getType()).isEqualTo(Instant.class);
-        assertThat(HearingEventResponse.class.getDeclaredField("payload").getType()).isEqualTo(Map.class);
+        assertThat(HearingEventResponse.class.getDeclaredField("payload").getType()).isEqualTo(String.class);
     }
 
     @Test
