@@ -742,7 +742,8 @@ components:
           description: Timestamp when this notification was created
           example: "2026-05-13T10:00:00Z"
         payload:
-          type: string
+          type: object
+          additionalProperties: true
           description: Full structured document payload. Shape varies by eventType.
 
     EventPayload:
@@ -815,7 +816,8 @@ components:
                     type: string
                     description: Case URN associated with the defendant
         payload:
-          type: string
+          type: object
+          additionalProperties: true
           description: Full structured document payload. When provided, stored and later served to subscribers via the hearing-events endpoint.
 
     EventNotificationPayload:
