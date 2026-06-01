@@ -129,7 +129,7 @@ class OpenAPISpecTest {
         assertThat(EventPayload.class.getDeclaredField("hearingId").getType()).isEqualTo(UUID.class);
         assertThat(EventPayload.class.getDeclaredField("eventType").getType()).isEqualTo(String.class);
         assertThat(EventPayload.class.getDeclaredField("timestamp").getType()).isEqualTo(Instant.class);
-        assertThat(EventPayload.class.getDeclaredField("payload").getType()).isEqualTo(String.class);
+        assertThat(EventPayload.class.getDeclaredField("payload").getType()).isEqualTo(Map.class);
 
         assertThat(EventPayloadDefendant.class.getDeclaredField("masterDefendantId").getType()).isEqualTo(UUID.class);
         assertThat(EventPayloadDefendant.class.getDeclaredField("name").getType()).isEqualTo(String.class);
