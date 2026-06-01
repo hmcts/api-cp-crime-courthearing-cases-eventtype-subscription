@@ -24,6 +24,7 @@ import java.lang.reflect.ParameterizedType;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -154,7 +155,7 @@ class OpenAPISpecTest {
         assertThat(HearingEventResponse.class.getDeclaredField("hearingEventId").getType()).isEqualTo(UUID.class);
         assertThat(HearingEventResponse.class.getDeclaredField("eventType").getType()).isEqualTo(String.class);
         assertThat(HearingEventResponse.class.getDeclaredField("createdAt").getType()).isEqualTo(Instant.class);
-        assertThat(HearingEventResponse.class.getDeclaredField("payload").getType()).isEqualTo(String.class);
+        assertThat(HearingEventResponse.class.getDeclaredField("payload").getType()).isEqualTo(Map.class);
     }
 
     @Test
