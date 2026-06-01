@@ -783,7 +783,6 @@ components:
           required:
             - masterDefendantId
             - name
-            - dateOfBirth
           properties:
             masterDefendantId:
               type: string
