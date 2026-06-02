@@ -48,22 +48,10 @@ jobs:
           api_name: ${{ github.event.repository.name }}
           api_version: ${{ needs.Artefact-Version.outputs.artefact_version }}
 
-  Push-Release-OpenAPI-Spec:
-    needs: [ Artefact-Version, Update-Spec-Version ]
-    uses: ./.github/workflows/publish-openapi-spec.yml
-    secrets:
-      SWAGGERHUB_API_KEY: ${{ secrets.APIHUB_API_KEY }}
-    with:
-      upload_artifact_name: ${{ needs.Update-Spec-Version.outputs.upload_artifact_name }}
-      apihub_owner: ${{ vars.APIHUB_ORGANISATION }}
-      api_name: ${{ github.event.repository.name }}
-      api_version: ${{ needs.Artefact-Version.outputs.artefact_version }}
-      is_release: true
-
   Publish:
     name: Publish - Java ${{ matrix.java }}
     runs-on: ubuntu-latest
-    needs: [ Artefact-Version, Push-Release-OpenAPI-Spec ]
+    needs: [ Artefact-Version, Update-Spec-Version ]
     strategy:
       matrix:
         java: [ 25 ]
