@@ -13,7 +13,12 @@ info:
 
 
 servers:
-  - url: https://api.example.com
+  - description: Crime Hearing Results Document Subscription API
+    url: https://api-cp-crime-hearing-results-document-subscription.net/{version}
+    variables:
+      version:
+        default: 1.0.0
+        description: API version; matches the spec info.version
 
 security:
   - bearerAuth: []
