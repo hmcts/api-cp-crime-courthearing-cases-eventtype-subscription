@@ -2,7 +2,17 @@ openapi: 3.1.0
 
 info:
   title: API for Crime Hearing Results Document Subscription
-  description: Hearing Results Document Subscription specification
+  description: |
+    Allows organisations to be automatically notified when crime hearing result
+    documents become available, such as when a verdict is recorded or sentencing
+    notes are published.
+
+    Organisations register the types of hearing events they are interested in and
+    provide an address to receive notifications. When a matching event is recorded
+    on the Common Platform, the subscription service picks it up and sends a
+    notification to each organisation that has signed up for that event type. Each
+    notification includes a security check so the receiving organisation can
+    confirm it genuinely came from the subscription service.
   version: 1.0.0
   license:
     name: MIT
