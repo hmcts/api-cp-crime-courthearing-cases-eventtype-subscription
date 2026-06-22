@@ -16,7 +16,7 @@ jobs:
       artefact_version: ${{ steps.artefact.outputs.release_version }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -38,7 +38,7 @@ jobs:
       upload_artifact_name: ${{ steps.update_spec.outputs.upload_artifact_name }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Update OpenAPI Spec Version
         id: update_spec
@@ -58,7 +58,7 @@ jobs:
 
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up JDK
         uses: actions/setup-java@v5
