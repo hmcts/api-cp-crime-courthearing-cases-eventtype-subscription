@@ -1,0 +1,48 @@
+<policies>
+    <inbound>
+        <choose>
+            <when condition="@(context.Request.Headers.ContainsKey(&quot;Authorization&quot;))">
+                <validate-jwt header-name="Authorization" failed-validation-httpcode="401" failed-validation-error-message="Your JWT token failed CNP validation! ">
+                    <openid-config url="https://login.microsoftonline.com/${tenant_id}/v2.0/.well-known/openid-configuration" />
+                    <audiences>
+                        <audience>${client_id}</audience>
+                    </audiences>
+                    <issuers>
+                        <issuer>https://login.microsoftonline.com/${tenant_id}/v2.0</issuer>
+                    </issuers>
+                    <required-claims>
+                        <claim name="aud" match="any">
+                            <value>${client_id}</value>
+                        </claim>
+                        <claim name="roles" match="any">
+                            <value>app.read</value>
+                        </claim>
+                    </required-claims>
+                </validate-jwt>
+            </when>
+            <otherwise>
+                <return-response>
+                    <set-status code="401" reason="Unauthorized" />
+                    <set-header name="Content-Type" exists-action="override">
+                        <value>application/json</value>
+                    </set-header>
+                    <set-body>{"error":"Missing CNP Authorization header."}</set-body>
+                </return-response>
+            </otherwise>
+        </choose>
+        <rate-limit-by-key calls="30" renewal-period="60" counter-key="@((context.Subscription?.Key ?? context.Request.IpAddress) + &quot;:hrds&quot;)" />
+        <quota-by-key calls="500" renewal-period="86400" counter-key="@((context.Subscription?.Key ?? context.Request.IpAddress) + &quot;:hrds&quot;)" />
+        <base />
+    </inbound>
+    <backend>
+        <limit-concurrency key="@((context.Subscription?.Key ?? context.Request.IpAddress) + &quot;:hrds&quot;)" max-count="10">
+            <forward-request />
+        </limit-concurrency>
+    </backend>
+    <outbound>
+        <base />
+    </outbound>
+    <on-error>
+        <base />
+    </on-error>
+</policies>
