@@ -764,7 +764,7 @@ components:
     EventPayload:
       type: object
       description:
-        Payload representing a stored PCR/Nows document event with defendant and case details.
+        Payload representing a stored PCR document event with defendant and case details.
       required:
         - eventId
         - materialId
@@ -780,7 +780,7 @@ components:
         eventId:
           type: string
           format: uuid
-          description: Unique identifier of the stored PCR/Nows document event
+          description: Unique identifier of the stored PCR document event
         hearingId:
           type: string
           format: uuid
@@ -789,7 +789,7 @@ components:
         materialId:
           type: string
           format: uuid
-          description: Unique identifier of the stored PCR/Nows document
+          description: Unique identifier of the stored PCR document
         timestamp:
           type: string
           format: date-time
