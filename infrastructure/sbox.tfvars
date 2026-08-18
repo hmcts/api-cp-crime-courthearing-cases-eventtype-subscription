@@ -16,6 +16,7 @@ entra_client_id = "30288840-e345-4543-99ee-f9253d789339"
 apis = {
   hearingresultsdocumentsubscription = {
     openapi_spec_path = "../src/main/resources/openapi/openapi-spec.yml"
+    path              = "amp/hrds"
     service_host      = "devamp01-appgw.dev.nl.cjscp"
     service_path      = "/hrds"
     revision          = "1"

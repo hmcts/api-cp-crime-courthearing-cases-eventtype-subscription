@@ -1,7 +1,7 @@
 openapi: 3.1.0
 
 info:
-  title: API for Crime Hearing Results Document Subscription
+  title: Crime Hearing Results Document Subscription API
   description: |
     Allows organisations to be automatically notified when crime hearing result
     documents become available, such as when a verdict is recorded or sentencing
