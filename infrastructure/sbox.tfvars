@@ -14,8 +14,9 @@ entra_tenant_id = "d44f885c-4fac-47bf-afde-d7d861ec4d7b"
 entra_client_id = "30288840-e345-4543-99ee-f9253d789339"
 
 apis = {
-  hearingresultsdocumentsubscription = {
+  hearingresults = {
     openapi_spec_path = "../src/main/resources/openapi/openapi-spec.yml"
+    display_name      = "Crime Hearing Results Document Subscription API (hrds)"
     path              = "amp/hrds"
     service_host      = "devamp01-appgw.dev.nl.cjscp"
     service_path      = "/hrds"
