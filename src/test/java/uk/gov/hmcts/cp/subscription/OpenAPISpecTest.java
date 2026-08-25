@@ -3,7 +3,6 @@ package uk.gov.hmcts.cp.subscription;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
-import uk.gov.hmcts.cp.openapi.api.NotificationApi;
 import uk.gov.hmcts.cp.openapi.api.SubscriptionApi;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
@@ -11,7 +10,6 @@ import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayloadCasesInner;
 import uk.gov.hmcts.cp.openapi.model.EventTypePayload;
 import uk.gov.hmcts.cp.openapi.model.EventTypeResponse;
-import uk.gov.hmcts.cp.openapi.model.HearingEventResponse;
 import uk.gov.hmcts.cp.openapi.model.HmacCredentials;
 import uk.gov.hmcts.cp.openapi.model.NotificationEndpoint;
 import uk.gov.hmcts.cp.openapi.model.EventPayload;
@@ -148,20 +146,5 @@ class OpenAPISpecTest {
         assertThat(EventNotificationPayload.class.getDeclaredField("documentGeneratedTimestamp").getType()).isEqualTo(Instant.class);
         assertThat(EventNotificationPayload.class.getDeclaredField("prisonEmailAddress").getType()).isEqualTo(String.class);
         assertThat(EventNotificationPayload.class.getDeclaredField("hearingId").getType()).isEqualTo(UUID.class);
-    }
-
-    @Test
-    void hearing_event_response_should_have_all_expected_fields() throws NoSuchFieldException {
-        assertThat(HearingEventResponse.class.getDeclaredField("hearingEventId").getType()).isEqualTo(UUID.class);
-        assertThat(HearingEventResponse.class.getDeclaredField("eventType").getType()).isEqualTo(String.class);
-        assertThat(HearingEventResponse.class.getDeclaredField("createdAt").getType()).isEqualTo(Instant.class);
-        assertThat(HearingEventResponse.class.getDeclaredField("payload").getType()).isEqualTo(Map.class);
-    }
-
-    @Test
-    void notification_api_should_have_get_hearing_event_method() throws NoSuchMethodException {
-        Method method = NotificationApi.class.getMethod("getHearingEvent", UUID.class, UUID.class, UUID.class);
-        ParameterizedType returnType = (ParameterizedType) method.getGenericReturnType();
-        assertThat(returnType.getActualTypeArguments()[0]).isEqualTo(HearingEventResponse.class);
     }
 }
