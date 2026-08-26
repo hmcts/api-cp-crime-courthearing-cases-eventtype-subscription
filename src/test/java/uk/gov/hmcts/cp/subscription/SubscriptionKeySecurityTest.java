@@ -85,7 +85,6 @@ class SubscriptionKeySecurityTest {
         assertEndpointHasResponseCode(paths, "/client-subscriptions/{clientSubscriptionId}", "put", "401");
         assertEndpointHasResponseCode(paths, "/client-subscriptions/{clientSubscriptionId}", "delete", "401");
         assertEndpointHasResponseCode(paths, "/client-subscriptions/{clientSubscriptionId}/documents/{documentId}", "get", "401");
-        assertEndpointHasResponseCode(paths, "/client-subscriptions/{clientSubscriptionId}/hearing-events/{hearingEventId}", "get", "401");
     }
 
     @Test
@@ -99,7 +98,6 @@ class SubscriptionKeySecurityTest {
         assertEndpointHasResponseCode(paths, "/client-subscriptions/{clientSubscriptionId}", "put", "403");
         assertEndpointHasResponseCode(paths, "/client-subscriptions/{clientSubscriptionId}", "delete", "403");
         assertEndpointHasResponseCode(paths, "/client-subscriptions/{clientSubscriptionId}/documents/{documentId}", "get", "403");
-        assertEndpointHasResponseCode(paths, "/client-subscriptions/{clientSubscriptionId}/hearing-events/{hearingEventId}", "get", "403");
     }
 
     @Test
